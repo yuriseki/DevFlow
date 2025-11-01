@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import ThemeProvider from "@/context/Theme";
-import Navbar from "@/app/components/navigation/navbar";
+import { Toaster } from "sonner";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
+import { Suspense } from "react";
 
 const inter = localFont({
   src: "./fonts/InterVF.ttf",
@@ -25,19 +28,30 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = async () => {
+    "use cache";
+    return await auth();
+  };
+
+  // const session = await auth();
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} ${spaceGrotesk.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <Navbar />
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
+    <Suspense>
+      <html lang="en" suppressHydrationWarning>
+        <SessionProvider session={session}>
+          <body className={`${inter.className} ${spaceGrotesk.variable} antialiased`}>
+            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+              {children}
+            </ThemeProvider>
+            <Toaster />
+          </body>
+        </SessionProvider>
+      </html>
+    </Suspense>
   );
 }
