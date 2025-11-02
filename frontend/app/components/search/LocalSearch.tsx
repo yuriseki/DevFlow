@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { formUrlQuery, removeKeysFromUrlQuery } from "@/lib/url";
-import { clearTimeout } from "node:timers";
 
 interface searchParams {
   route: string;
@@ -43,8 +42,10 @@ const LocalSearch = ({ route, imgSrc, placeholder, otherClasses }: searchParams)
       }
     }, 1000);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, router]);
+    return () => {
+      clearTimeout(delayDebounceFn);
+    };
+  }, [searchQuery, router, searchQuery, searchParams]);
 
   return (
     <div

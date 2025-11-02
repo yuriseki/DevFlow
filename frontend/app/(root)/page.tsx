@@ -6,6 +6,7 @@ import Link from "next/link";
 import LocalSearch from "@/app/components/search/LocalSearch";
 import { id, ta } from "zod/v4/locales";
 import { create } from "domain";
+import HomeFilter from "@/app/components/filters/HomeFilter";
 
 const questions = [
   {
@@ -141,7 +142,8 @@ interface SearchParams {
 }
 
 const Home = async ({ searchParams }: SearchParams) => {
-  const { query } = await searchParams;
+  const { query = "", filter = "" } = await searchParams;
+  const filteredQuestions = questions.filter((question) => question.title.toLowerCase().includes(query?.toLowerCase()));
   return (
     <>
       <section className="flex w-full flex-col-reverse justify-between gap-4 sm:flex-row sm:items-center">
@@ -153,9 +155,9 @@ const Home = async ({ searchParams }: SearchParams) => {
       <section className="mt-11">
         <LocalSearch route="/" imgSrc="/icons/search.svg" placeholder="Search questions..." otherClasses="flex-1" />
       </section>
-      HomeFilter
+      <HomeFilter />
       <div className="mt-10 flex w-full flex-col gap-6">
-        {questions.map((question) => (
+        {filteredQuestions.map((question) => (
           <h2 key={question._id}>{question.title}</h2>
         ))}
       </div>
