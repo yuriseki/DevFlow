@@ -1,12 +1,10 @@
 import React from "react";
-import { auth, signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
 import ROUTES from "@/constants/routes";
 import Link from "next/link";
 import LocalSearch from "@/app/components/search/LocalSearch";
-import { id, ta } from "zod/v4/locales";
-import { create } from "domain";
 import HomeFilter from "@/app/components/filters/HomeFilter";
+import QuestionCard from "@/app/components/cards/QuestionCard";
 
 const questions = [
   {
@@ -17,11 +15,16 @@ const questions = [
       { _id: 1, name: "react" },
       { _id: 2, name: "javascript" },
     ],
-    author: { _id: 1, name: "John Doe" },
+    author: {
+      _id: 1,
+      name: "John Doe",
+      image:
+        "https://img.freepik.com/free-vector/smiling-young-man-illustration_1308-174669.jpg?semt=ais_hybrid&w=740&q=80",
+    },
     upvotes: 10,
     answers: 5,
     views: 101,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
   {
     _id: 2,
@@ -31,11 +34,16 @@ const questions = [
       { _id: 3, name: "nextjs" },
       { _id: 2, name: "javascript" },
     ],
-    author: { _id: 2, name: "Jane Smith" },
+    author: {
+      _id: 2,
+      name: "Jane Smith",
+      image:
+        "https://img.freepik.com/free-vector/woman-with-braided-hair-illustration_1308-174675.jpg?semt=ais_hybrid&w=740&q=80",
+    },
     upvotes: 7,
     answers: 3,
     views: 75,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
   {
     _id: 3,
@@ -49,7 +57,7 @@ const questions = [
     upvotes: 15,
     answers: 8,
     views: 150,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
   {
     _id: 4,
@@ -63,7 +71,7 @@ const questions = [
     upvotes: 12,
     answers: 4,
     views: 90,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
   {
     _id: 5,
@@ -77,7 +85,7 @@ const questions = [
     upvotes: 9,
     answers: 6,
     views: 80,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
   {
     _id: 6,
@@ -91,7 +99,7 @@ const questions = [
     upvotes: 14,
     answers: 7,
     views: 120,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
   {
     _id: 7,
@@ -105,7 +113,7 @@ const questions = [
     upvotes: 11,
     answers: 2,
     views: 95,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
   {
     _id: 8,
@@ -119,7 +127,7 @@ const questions = [
     upvotes: 13,
     answers: 5,
     views: 110,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
   {
     _id: 9,
@@ -133,7 +141,7 @@ const questions = [
     upvotes: 8,
     answers: 3,
     views: 70,
-    createdAt: new Date(),
+    createdAt: new Date("2025-05-25"),
   },
 ];
 
@@ -158,7 +166,7 @@ const Home = async ({ searchParams }: SearchParams) => {
       <HomeFilter />
       <div className="mt-10 flex w-full flex-col gap-6">
         {filteredQuestions.map((question) => (
-          <h2 key={question._id}>{question.title}</h2>
+          <QuestionCard key={question._id} question={question} />
         ))}
       </div>
     </>

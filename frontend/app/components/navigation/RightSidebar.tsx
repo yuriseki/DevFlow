@@ -2,7 +2,7 @@ import React from "react";
 import ROUTES from "@/constants/routes";
 import Image from "next/image";
 import Link from "next/link";
-import TagCard from "@/app/components/navigation/cards/TagCard";
+import TagCard from "@/app/components/cards/TagCard";
 
 const hotQuestions = [
   { _id: 1, title: "How to implement authentication in React?" },
