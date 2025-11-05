@@ -66,7 +66,7 @@ const QuestionForm = () => {
   const handleCreateQuestion = (data: z.infer<typeof AskQuestionSchema>) => {
     console.log(data);
   };
-  const handleTagRemove = (tag: string, field: string[]) => {
+  const handleTagRemove = (tag: string, field: { value: string[] }) => {
     const newTags = field.value.filter((t) => t !== tag);
 
     form.setValue("tags", newTags);

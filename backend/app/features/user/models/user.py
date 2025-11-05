@@ -1,0 +1,60 @@
+"""This module defines the data models for the User feature."""
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING, List
+
+from sqlmodel import SQLModel, Field, Relationship
+
+if TYPE_CHECKING:
+    from app.features.user.models.account import Account
+    from app.features.question.models.question import Question
+    from app.features.answer.models.answer import Answer
+    from app.features.user_collection.models.user_collection import UserCollection
+
+
+class UserBase(SQLModel):
+    """Base model for User that contains shared fields."""
+    name: str
+    username: str
+    email: str
+    bio: str | None
+    image: str
+    location: str | None
+    portfolio: str | None
+    reputation: float
+
+
+class User(UserBase, table=True):
+    """Represents the User table in the database."""
+    id: int | None = Field(primary_key=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
+    accounts: List["Account"] = Relationship(back_populates="user")
+    questions: List["Question"] = Relationship(back_populates="author")
+    answers: List["Answer"] = Relationship(back_populates="user")
+    collection: List["UserCollection"] = Relationship(back_populates="user")
+
+
+class UserCreate(UserBase):
+    """Schema for creating a new User.
+
+    This schema is used in the create endpoint.
+    """
+    pass
+
+
+class UserUpdate(SQLModel):
+    """Schema for updating an existing User.
+
+    This schema is used in the update endpoint.
+    """
+    pass
+
+
+class UserLoad(UserBase):
+    """Schema for loading a User.
+
+    This schema is used in the load and list endpoints.
+    """
+    id: int
+    created_at: datetime
+    updated_at: datetime
