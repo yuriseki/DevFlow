@@ -1,6 +1,6 @@
 """This module defines the data models for the User feature."""
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -28,10 +28,10 @@ class User(UserBase, table=True):
     id: int | None = Field(primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
-    accounts: List["Account"] = Relationship(back_populates="user")
-    questions: List["Question"] = Relationship(back_populates="author")
-    answers: List["Answer"] = Relationship(back_populates="user")
-    collection: List["UserCollection"] = Relationship(back_populates="user")
+    accounts: Optional[List["Account"]] = Relationship(back_populates="user")
+    questions: Optional[List["Question"]] = Relationship(back_populates="author")
+    answers: Optional[List["Answer"]] = Relationship(back_populates="user")
+    collection: Optional[List["UserCollection"]] = Relationship(back_populates="user")
 
 
 class UserCreate(UserBase):

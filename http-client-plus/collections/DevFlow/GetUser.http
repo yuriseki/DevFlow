@@ -1,0 +1,5 @@
+### GetUser
+GET http://0.0.0.0:8000/api/v1/user/load/1
+
+>> GetUser/response-{{$timestamp}}.json
+

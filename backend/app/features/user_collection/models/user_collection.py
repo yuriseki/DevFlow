@@ -16,13 +16,12 @@ class UserCollectionBase(SQLModel):
 class UserCollection(SQLModel, table=True):
     __tablename__ = "user_collection"
     """Represents the UserCollection table in the database."""
-    id: int | None = Field(primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
     user_id: int = Field(foreign_key="user.id", primary_key=True)
     question_id: int = Field(foreign_key="question.id", primary_key=True)
-    user: "User" = Relationship(back_populates="collection", link_model=User)
-    questions: List["Question"] = Relationship(link_model=Question)
+    user: "User" = Relationship(back_populates="collection")
+    question: "Question" = Relationship()
 
 
 class UserCollectionCreate(UserCollectionBase):

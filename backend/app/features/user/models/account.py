@@ -1,6 +1,6 @@
 """This module defines the data models for the Account feature."""
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -23,7 +23,7 @@ class Account(AccountBase, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
     password: str | None
-    user: "User" = Relationship(back_populates="user")
+    user: Optional["User"] = Relationship(back_populates="accounts")
 
 
 class AccountCreate(AccountBase):

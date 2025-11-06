@@ -19,3 +19,7 @@ coverage
 .cache
 .next
 out
+
+__pycache__/*
+http-client-plus/**/response-*.json
+*.db
