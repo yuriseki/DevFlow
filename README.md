@@ -1,4 +1,5 @@
 # Project Overview
+A naive clone of StackOverflow to learn more about NextJs and FastAPI.
 
 This is a full-stack web application with a Next.js frontend and a FastAPI backend. The project is structured as a monorepo with a `frontend` and `backend` directory.
 
