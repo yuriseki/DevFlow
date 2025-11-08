@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlmodel import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
-    from app.features.user.models.account import Account
+    from app.features.account.models.account import Account
     from app.features.question.models.question import Question
     from app.features.answer.models.answer import Answer
     from app.features.user_collection.models.user_collection import UserCollection

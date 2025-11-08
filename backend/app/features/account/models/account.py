@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
+from sqlalchemy import UniqueConstraint
 from sqlmodel import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
@@ -24,6 +25,8 @@ class Account(AccountBase, table=True):
     updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
     password: str | None
     user: Optional["User"] = Relationship(back_populates="accounts")
+
+    __table_args__ = (UniqueConstraint("provider_account_id", "username", name="uq_provider_account_id_username"),)
 
 
 class AccountCreate(AccountBase):

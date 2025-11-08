@@ -3,6 +3,7 @@ from typing import Generic, TypeVar, Type
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import SQLModel
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType")
@@ -23,10 +24,10 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
             load_schema: The load schema type.
             update_schema: The update schema type.
         """
-        self.model = model
-        self.create_schema = create_schema
-        self.load_schema = load_schema
-        self.update_schema = update_schema
+        self.model: SQLModel = model
+        self.create_schema: SQLModel = create_schema
+        self.load_schema: SQLModel = load_schema
+        self.update_schema: SQLModel = update_schema
 
     async def load(self, session: AsyncSession, id: int) -> LoadSchemaType | None:
         """Loads a model instance by its ID.
@@ -41,7 +42,7 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
         result = await session.execute(select(self.model).where(self.model.id == id))
         db_obj = result.scalar_one_or_none()
         if db_obj:
-            return self.load_schema.from_orm(db_obj)
+            return self.load_schema.model_validate(db_obj)
         return None
 
     async def create(self, session: AsyncSession, obj_in: CreateSchemaType) -> LoadSchemaType:
@@ -63,7 +64,7 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
             await session.flush()
             await session.commit()
             await session.refresh(obj)
-            return self.load_schema.from_orm(obj)
+            return self.load_schema.model_validate(obj)
         except IntegrityError as e:
             await session.rollback()
             raise e
@@ -87,7 +88,7 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
-        return self.load_schema.from_orm(db_obj)
+        return self.load_schema.model_validate(db_obj)
 
     async def delete(self, session: AsyncSession, db_obj: ModelType) -> None:
         """Deletes a model instance.

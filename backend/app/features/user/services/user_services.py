@@ -43,7 +43,7 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
             # Use HTTP_409_CONFLICT for a duplicate entry conflict
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="User with this email already exists"
+                detail="User with this email already exists",
             )
 
         # Check if username already exists.
@@ -54,7 +54,7 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
             # Use HTTP_409_CONFLICT for a duplicate entry conflict
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="User with this username already exists"
+                detail="User with this username already exists",
             )
 
         return await super().create(session, user)
@@ -64,7 +64,20 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
         """Returns a list of all User objects."""
         stmt = select(User)
         result = await session.execute(stmt)
-        result = result.all()
-        user_load_list: List[UserLoad] = [UserLoad.model_validate(user) for user in result]
+        users = result.scalars().all()
+        user_load_list: List[UserLoad] = [UserLoad.model_validate(user) for user in users]
 
         return user_load_list
+
+    async def load_by_email(self, session: AsyncSession, email: str) -> UserLoad:
+        """Loads a User object by email."""
+        stmt = select(User).where(User.email == email)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        user_load = UserLoad.model_validate(user)
+
+        return user_load

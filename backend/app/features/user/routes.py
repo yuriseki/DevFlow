@@ -2,7 +2,7 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import get_session
@@ -12,16 +12,24 @@ from .services.user_services import UserService
 
 router = APIRouter(
     prefix="/api/v1/user",
-    tags=["user"]
+    tags=["user"],
 )
 
 user_service = UserService(User, UserCreate, UserLoad, UserUpdate)
+
 
 @router.get("/", response_model=List[UserLoad])
 async def get_all(session: AsyncSession = Depends(get_session)):
     """Gets all Users."""
     users = await user_service.all(session)
     return users
+
+
+@router.post("/email", response_model=UserLoad)
+async def load_by_email(email: str = Body(..., embed=True), session: AsyncSession = Depends(get_session)):
+    user = await user_service.load_by_email(session, email)
+    return user
+
 
 @router.get("/load/{user_id}", response_model=UserLoad)
 async def get_user(user_id: int, session: AsyncSession = Depends(get_session)):

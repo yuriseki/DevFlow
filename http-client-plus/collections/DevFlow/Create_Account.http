@@ -1,0 +1,14 @@
+### Create Account
+POST http://0.0.0.0:8000/api/v1/account/create
+Content-Type: application/json
+
+{
+  "username": "account_user3",
+  "image": null,
+  "provider": "email",
+  "provider_account_id": "account_user3@example.com",
+  "user_id": 1,
+  "password": "securepassword"
+}
+
+>> Create_Account/response-{{$timestamp}}.json
