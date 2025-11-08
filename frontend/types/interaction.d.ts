@@ -1,0 +1,38 @@
+export enum ActionType {
+  QUESTION = "question",
+  ANSWER = "answer",
+  UPVOTE = "upvote",
+  DOWNVOTE = "downvote",
+  TAG = "tag",
+}
+
+export interface InteractionBase {}
+
+export interface Interaction extends InteractionBase {
+  id?: number;
+  created_at: string;
+  updated_at?: string | null;
+  user_id: number;
+  content_type: string;
+  target_id: number;
+  action_type: ActionType;
+}
+
+export interface InteractionCreate extends InteractionBase {
+  user_id: number;
+  content_type: string;
+  target_id: number;
+  action_type: ActionType;
+}
+
+export type InteractionUpdate = Partial<InteractionBase>;
+
+export interface InteractionLoad extends InteractionBase {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  user_id: number;
+  content_type: string;
+  target_id: number;
+  action_type: ActionType;
+}

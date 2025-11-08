@@ -1,0 +1,33 @@
+export enum TargetVote {
+  ANSWER = "answer",
+  QUESTION = "question",
+}
+
+export enum VoteType {
+  UPVOTE = "upvote",
+  DOWNVOTE = "downvote",
+}
+
+export interface VoteBase {
+  user_id: number;
+  target_id: number;
+  target_vote: TargetVote;
+  vote_type: VoteType;
+}
+
+export interface Vote extends VoteBase {
+  id?: number;
+  created_at: string;
+  updated_at?: string | null;
+}
+
+export interface VoteCreate extends VoteBase {}
+
+export type VoteUpdate = Partial<VoteBase>;
+
+export interface VoteLoad extends VoteBase {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  value?: string | null;
+}
