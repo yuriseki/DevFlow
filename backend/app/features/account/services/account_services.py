@@ -58,3 +58,16 @@ class AccountService(BaseModelService[Account, AccountCreate, AccountLoad, Accou
         accounts_load_list: List[AccountLoad] = [AccountLoad.model_validate(account) for account in accounts]
 
         return accounts_load_list
+
+    async def load_by_provider_account_id(self, session: AsyncSession, provider: str) -> AccountLoad:
+        """Loads an Account object by provider id."""
+        stmt = select(Account).where(Account.provider_account_id == provider)
+        result = await session.execute(stmt)
+        account = result.scalar_one_or_none()
+
+        if account is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+
+        account_load = AccountLoad.model_validate(account)
+
+        return account_load

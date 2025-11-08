@@ -1,6 +1,6 @@
 """This module provides the routes for the Account feature."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import get_session
@@ -87,3 +87,8 @@ async def delete(account_id: int, session: AsyncSession = Depends(get_session)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
     await account_service.delete(session, db_obj)
     return {"message": "Account deleted successfully"}
+
+@router.post("/provider", response_model=AccountLoad)
+async def load_by_provider_account_id(provider: str = Body(..., embed=True), session: AsyncSession = Depends(get_session)):
+    account = await account_service.load_by_provider_account_id(session, provider)
+    return account
