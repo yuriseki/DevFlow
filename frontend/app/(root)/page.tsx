@@ -5,6 +5,7 @@ import Link from "next/link";
 import LocalSearch from "@/app/components/search/LocalSearch";
 import HomeFilter from "@/app/components/filters/HomeFilter";
 import QuestionCard from "@/app/components/cards/QuestionCard";
+import { auth } from "@/auth";
 
 const questions = [
   {
@@ -185,6 +186,9 @@ interface SearchParams {
 }
 
 const Home = async ({ searchParams }: SearchParams) => {
+  const session = await auth();
+  console.log("session", session);
+
   const { query = "", filter = "" } = await searchParams;
   const filteredQuestions = questions.filter((question) =>
     question.title.toLowerCase().includes(query?.toLowerCase())

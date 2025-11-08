@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import get_session
 from app.features.account.models.account import Account, AccountCreate, AccountLoad, \
-    AccountUpdate
+    AccountUpdate, AccountSignInWithOauth
 from .services.account_services import AccountService
 
 router = APIRouter(
@@ -88,7 +88,16 @@ async def delete(account_id: int, session: AsyncSession = Depends(get_session)):
     await account_service.delete(session, db_obj)
     return {"message": "Account deleted successfully"}
 
+
 @router.post("/provider", response_model=AccountLoad)
-async def load_by_provider_account_id(provider: str = Body(..., embed=True), session: AsyncSession = Depends(get_session)):
+async def load_by_provider_account_id(provider: str = Body(..., embed=True),
+                                      session: AsyncSession = Depends(get_session)):
     account = await account_service.load_by_provider_account_id(session, provider)
+    return account
+
+
+@router.post("/sign-in-with-oauth", response_model=AccountLoad)
+async def sign_in_with_oauth(account_with_oauth: AccountSignInWithOauth,
+                             session: AsyncSession = Depends(get_session)):
+    account = await account_service.sign_in_with_oauth(session, account_with_oauth)
     return account

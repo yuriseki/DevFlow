@@ -81,3 +81,17 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
         user_load = UserLoad.model_validate(user)
 
         return user_load
+
+    @staticmethod
+    async def load_by_username(session: AsyncSession, username: str) -> UserLoad:
+        """Loads a User object by username."""
+        stmt = select(User).where(User.username == username)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        user_load = UserLoad.model_validate(user)
+
+        return user_load

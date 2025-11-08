@@ -2,11 +2,14 @@
 from typing import Type, List
 
 from fastapi import HTTPException, status
+from slugify import slugify
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func
 
 from app.core.lib.base_model_service import BaseModelService
-from ..models.account import Account, AccountCreate, AccountLoad, AccountUpdate
+from ..models.account import Account, AccountCreate, AccountLoad, AccountUpdate, AccountSignInWithOauth
+from ...user.models.user import UserLoad, UserCreate, User, UserUpdate
+from ...user.routes import user_service
 
 
 class AccountService(BaseModelService[Account, AccountCreate, AccountLoad, AccountUpdate]):
@@ -70,4 +73,61 @@ class AccountService(BaseModelService[Account, AccountCreate, AccountLoad, Accou
 
         account_load = AccountLoad.model_validate(account)
 
+        return account_load
+
+    async def sign_in_with_oauth(self, session: AsyncSession,
+                                 account_sign_in_with_oauth: AccountSignInWithOauth) -> AccountLoad:
+        account_is_new = False
+        user_is_new = False
+        update_user = False
+        # Get user account
+        try:
+            account = await self.load_by_provider_account_id(session, account_sign_in_with_oauth.provider_account_id)
+        except HTTPException as e:
+            # Account do not exists, let's create one.
+            if e.status_code == status.HTTP_404_NOT_FOUND:
+                account_is_new = True
+                account = AccountCreate(
+                    username=account_sign_in_with_oauth.user.username,
+                    image=account_sign_in_with_oauth.user.image,
+                    provider=account_sign_in_with_oauth.provider,
+                    provider_account_id=account_sign_in_with_oauth.provider_account_id,
+                    password=None,
+                    user_id=None,
+                )
+
+        # Check if user exists
+        try:
+            user = await user_service.load_by_email(session, account_sign_in_with_oauth.user.email)
+            # User existis, let's updat it.
+            if user.image != account_sign_in_with_oauth.user.image:
+                result = await session.execute(select(User).where(User.id == user.id))
+                user = result.scalar_one_or_none()
+                update_user = True
+                user.image = account_sign_in_with_oauth.user.image
+                session.add(user)
+
+        except HTTPException as e:
+            # User do not exists, let's create one.
+            if e.status_code == status.HTTP_404_NOT_FOUND:
+                user_is_new = True
+                user = account_sign_in_with_oauth.user
+                user = User(**user.model_dump())
+                session.add(user)
+                await session.flush()
+        except Exception as e:
+            print(e)
+
+        if account_is_new:
+            new_account = Account(**account.model_dump())
+            new_account.user_id = user.id
+            session.add(new_account)
+            account = new_account
+
+        if account_is_new or user_is_new or update_user:
+            await session.commit()
+            await session.refresh(account)
+            await session.refresh(user)
+
+        account_load = AccountLoad.model_validate(account)
         return account_load

@@ -1,9 +1,11 @@
 """This module defines the data models for the Account feature."""
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import UniqueConstraint
 from sqlmodel import SQLModel, Field, Relationship
+
+from app.features.user.models.user import UserCreate
 
 if TYPE_CHECKING:
     from app.features.user.models.user import User
@@ -15,7 +17,7 @@ class AccountBase(SQLModel):
     image: str | None
     provider: str
     provider_account_id: str
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int | None = Field(foreign_key="user.id")
 
 
 class Account(AccountBase, table=True):
@@ -34,7 +36,8 @@ class AccountCreate(AccountBase):
 
     This schema is used in the create endpoint.
     """
-    password: str
+    user_id: int | None
+    password: str | None
 
 
 class AccountUpdate(SQLModel):
@@ -42,7 +45,7 @@ class AccountUpdate(SQLModel):
 
     This schema is used in the update endpoint.
     """
-    password: str
+    password: str | None
 
 
 class AccountLoad(AccountBase):
@@ -53,3 +56,11 @@ class AccountLoad(AccountBase):
     id: int
     created_at: datetime
     updated_at: datetime
+
+class AccountSignInWithOauth(SQLModel):
+    """Schema for sign in an Account.
+    This schema is used in the sign in with OAuth provider endpoint.
+    """
+    provider: str
+    provider_account_id: str
+    user: "UserCreate"

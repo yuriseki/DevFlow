@@ -1,3 +1,5 @@
+from typing import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import create_engine
@@ -13,11 +15,17 @@ async_engine = AsyncEngine(
 )
 
 
-async def get_session() -> AsyncSession:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     session = sessionmaker(
         bind=async_engine,
         class_=AsyncSession,
     )
 
     async with session() as s:
-        yield s
+        try:
+            yield s
+        except:
+            await s.rollback()
+            raise
+        finally:
+            await s.close()

@@ -16,11 +16,11 @@ class UserBase(SQLModel):
     name: str
     username: str
     email: str
-    bio: str | None
+    bio: Optional[str] = None
     image: str
-    location: str | None
-    portfolio: str | None
-    reputation: float
+    location: Optional[str] = None
+    portfolio: Optional[str] = None
+    reputation: Optional[float] = 0
 
 
 class User(UserBase, table=True):

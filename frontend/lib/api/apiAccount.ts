@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type AccountCreate, AccountLoad, AccountUpdate } from '@/types/account';
+import { type AccountCreate, AccountLoad, AccountSignInWithOauth, AccountUpdate } from '@/types/account';
 
 export const apiAccount = {
   getAccount: (accountId: number): Promise<ActionResponse<AccountLoad>> =>
@@ -29,5 +29,11 @@ export const apiAccount = {
     fetchHandler(`/api/v1/account/provider`, {
       method: "POST",
       body: JSON.stringify(provider)
+    }),
+
+  signInWithOauth: (account_with_oauth: AccountSignInWithOauth): Promise<ActionResponse<AccountLoad>> =>
+    fetchHandler(`/api/v1/account/sign-in-with-oauth`, {
+      method: "POST",
+      body: JSON.stringify(account_with_oauth)
     }),
 };

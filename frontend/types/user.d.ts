@@ -13,7 +13,7 @@ export interface UserBase {
   image: string;
   location?: string | null;
   portfolio?: string | null;
-  reputation: number;
+  reputation?: number | null;
 }
 
 export interface User extends UserBase {
@@ -34,6 +34,13 @@ export interface UserLoad extends UserBase {
   id: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserSignInWithOauth {
+  name: string;
+  username: string;
+  email: string;
+  image?: string | null;
 }
 
 export type UserUpdate = Partial<UserBase>;
