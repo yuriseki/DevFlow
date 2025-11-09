@@ -1,4 +1,4 @@
-import { fetchHandler } from "@/lib/apiFetch";
+import { fetchHandler } from "@/lib/handlers/apiFetch";
 import { UserCreate, UserLoad, UserUpdate } from "@/types/user";
 import { ActionResponse } from "@/types/global";
 

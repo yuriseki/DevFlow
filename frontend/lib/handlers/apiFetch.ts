@@ -47,7 +47,7 @@ export async function fetchHandler<T>(
       throw new RequestError(res.status, res.statusText);
     }
 
-    return await res.json();
+    return { success: true, status: res.status, data: await res.json() };
   } catch (e: unknown) {
     if (e instanceof Error) {
       if (e.name === "AbortError") {

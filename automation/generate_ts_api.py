@@ -49,7 +49,7 @@ def check_npm_dependencies():
 
 # --- Template Files Check ---
 REQUIRED_TEMPLATE_FILES = [
-    "apiFetch.ts",
+    "handlers/apiFetch.ts",
     "handlers/error.ts",
     "http-errors.ts",
     "logger.ts",
@@ -287,7 +287,7 @@ def generate_ts_api_calls(file_path: Path, feature_name: str) -> str:
     if not route_visitor.routes:
         return ""
 
-    imports_str = "import { fetchHandler } from '@/lib/apiFetch';\n"
+    imports_str = "import { fetchHandler } from '@/lib/handlers/apiFetch';\n"
     imports_str += "import { ActionResponse } from '@/types/global';\n"
     if route_visitor.imports:
         type_imports = ", ".join(sorted(list(route_visitor.imports)))
