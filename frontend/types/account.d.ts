@@ -8,7 +8,7 @@ export interface AccountBase {
   image?: string | null;
   provider: string;
   provider_account_id: string;
-  user_id: number;
+  user_id?: number | null;
 }
 
 export interface Account extends AccountBase {
@@ -20,7 +20,8 @@ export interface Account extends AccountBase {
 }
 
 export interface AccountCreate extends AccountBase {
-  password: string;
+  user_id?: number | null;
+  password?: string | null;
 }
 
 export interface AccountLoad extends AccountBase {
@@ -29,12 +30,24 @@ export interface AccountLoad extends AccountBase {
   updated_at: string;
 }
 
+export interface AccountSignInWithCredentials {
+  email: string;
+  password: string;
+}
+
 export interface AccountSignInWithOauth {
   provider: string;
   provider_account_id: string;
   user: UserCreate;
 }
 
-export interface AccountUpdate {
+export interface AccountSignUpWithCredentials {
+  name: string;
+  username: string;
+  email: string;
   password: string;
+}
+
+export interface AccountUpdate {
+  password?: string | null;
 }

@@ -57,6 +57,7 @@ class AccountLoad(AccountBase):
     created_at: datetime
     updated_at: datetime
 
+
 class AccountSignInWithOauth(SQLModel):
     """Schema for sign in an Account.
     This schema is used in the sign in with OAuth provider endpoint.
@@ -64,3 +65,16 @@ class AccountSignInWithOauth(SQLModel):
     provider: str
     provider_account_id: str
     user: "UserCreate"
+
+
+class AccountSignUpWithCredentials(SQLModel):
+    """Schema for sign in an Account with credentials."""
+    name: str
+    username: str
+    email: str
+    password: str
+
+
+class AccountSignInWithCredentials(SQLModel):
+    email: str
+    password: str

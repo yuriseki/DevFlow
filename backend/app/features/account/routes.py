@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import get_session
 from app.features.account.models.account import Account, AccountCreate, AccountLoad, \
-    AccountUpdate, AccountSignInWithOauth
+    AccountUpdate, AccountSignInWithOauth, AccountSignUpWithCredentials, AccountSignInWithCredentials
 from .services.account_services import AccountService
 
 router = APIRouter(
@@ -100,4 +100,16 @@ async def load_by_provider_account_id(provider: str = Body(..., embed=True),
 async def sign_in_with_oauth(account_with_oauth: AccountSignInWithOauth,
                              session: AsyncSession = Depends(get_session)):
     account = await account_service.sign_in_with_oauth(session, account_with_oauth)
+    return account
+
+
+@router.post("/sign-up-with-credentials", response_model=AccountLoad)
+async def sign_up_with_credentials(account_sign_up_with_credentials: AccountSignUpWithCredentials,
+                                   session: AsyncSession = Depends(get_session)):
+    account = await account_service.sign_up_with_credentials(session, account_sign_up_with_credentials)
+    return account
+
+@router.post("/sign-in-with-credentials/", response_model=AccountLoad)
+async def sign_in_with_credentials(account_sign_in_with_credentials: AccountSignInWithCredentials, session: AsyncSession = Depends(get_session)):
+    account = await account_service.get_account_by_credentials(session, account_sign_in_with_credentials)
     return account

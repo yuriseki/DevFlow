@@ -30,6 +30,10 @@ async def load_by_email(email: str = Body(..., embed=True), session: AsyncSessio
     user = await user_service.load_by_email(session, email)
     return user
 
+@router.post("/username", response_model=UserLoad)
+async def load_by_username(username: str = Body(..., embed=True), session: AsyncSession = Depends(get_session)):
+    user = await user_service.load_by_username(session, username)
+    return user
 
 @router.get("/load/{user_id}", response_model=UserLoad)
 async def get_user(user_id: int, session: AsyncSession = Depends(get_session)):

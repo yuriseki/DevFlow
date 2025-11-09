@@ -2,12 +2,62 @@ import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "@auth/core/providers/google";
 import { apiAccount } from "@/lib/api/apiAccount";
-import { AccountLoad, AccountSignInWithOauth } from "@/types/account";
-import { UserCreate } from "@/types/user";
+import {
+  AccountLoad,
+  AccountSignInWithCredentials,
+  AccountSignInWithOauth,
+} from "@/types/account";
+import { UserCreate, UserLoad } from "@/types/user";
 import { ActionResponse } from "@/types/global";
+import { SignInSchema } from "@/app/(auth)/components/forms/validations";
+import { apiUser } from "@/lib/api/apiUser";
+import bcrypt from "bcryptjs";
+
+import Credentials from "next-auth/providers/credentials";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [GitHub, Google],
+  providers: [
+    GitHub,
+    Google,
+    Credentials({
+      async authorize(credentials) {
+        const validatedFields = SignInSchema.safeParse(credentials);
+        if (validatedFields.success) {
+          const { email, password } = validatedFields.data;
+
+          const hashedPassword = await bcrypt.hash(password, 12);
+
+          const signInAccount: AccountSignInWithCredentials = {
+            email,
+            hashedPassword,
+          };
+
+          const { data: existingAccount } =
+            (await apiAccount.signInWithCredentials(
+              signInAccount
+            )) as ActionResponse<AccountLoad>;
+
+          if (!existingAccount) {
+            return null;
+          }
+
+          const { data: existingUser } = (await apiUser.getUser(
+            existingAccount.user_id
+          )) as ActionResponse<UserLoad>;
+
+          if (existingUser) {
+            return {
+              id: existingUser.id,
+              email: existingUser.email,
+              name: existingUser.name,
+              image: existingUser.image,
+            };
+          }
+        }
+        return null;
+      },
+    }),
+  ],
   callbacks: {
     async session({ session, token }) {
       session.user.id = token.sub as string;

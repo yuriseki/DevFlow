@@ -2,13 +2,13 @@
 from typing import Type, List
 
 from fastapi import HTTPException, status
-from slugify import slugify
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func
 
 from app.core.lib.base_model_service import BaseModelService
-from ..models.account import Account, AccountCreate, AccountLoad, AccountUpdate, AccountSignInWithOauth
-from ...user.models.user import UserLoad, UserCreate, User, UserUpdate
+from ..models.account import Account, AccountCreate, AccountLoad, AccountUpdate, AccountSignInWithOauth, \
+    AccountSignUpWithCredentials, AccountSignInWithCredentials
+from ...user.models.user import User
 from ...user.routes import user_service
 
 
@@ -130,4 +130,66 @@ class AccountService(BaseModelService[Account, AccountCreate, AccountLoad, Accou
             await session.refresh(user)
 
         account_load = AccountLoad.model_validate(account)
+        return account_load
+
+    async def sign_up_with_credentials(self, session: AsyncSession,
+                                       account_sign_up_with_credentials: AccountSignUpWithCredentials) -> AccountLoad:
+        user_exists = True
+        # Check user by email.
+        try:
+            user_by_email = await user_service.load_by_email(session, account_sign_up_with_credentials.email)
+        except HTTPException as e:
+            if e.status_code == status.HTTP_404_NOT_FOUND:
+                user_exists = False
+            else:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already exists")
+
+        # Check user by username
+        try:
+            user_by_username = await user_service.load_by_username(session, account_sign_up_with_credentials.username)
+        except HTTPException as e:
+            if e.status_code == status.HTTP_404_NOT_FOUND:
+                user_exists = False
+            else:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already exists")
+
+        # Create the user
+        if user_exists:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
+        else:
+            new_user = User(
+                name=account_sign_up_with_credentials.name,
+                username=account_sign_up_with_credentials.username,
+                email=account_sign_up_with_credentials.email,
+                image="",
+                reputation=0,
+            )
+            session.add(new_user)
+            await session.flush()
+
+            account = Account(
+                username=account_sign_up_with_credentials.username,
+                image=None,
+                provider="email",
+                provider_account_id=account_sign_up_with_credentials.email,
+                user_id=new_user.id,
+            )
+            session.add(account)
+            await session.commit()
+            await session.refresh(account)
+            await session.refresh(new_user)
+
+            account_load = AccountLoad.model_validate(account)
+            return account_load
+
+    async def get_account_by_credentials(self, session: AsyncSession, sign_in_account = AccountSignInWithCredentials) -> AccountLoad:
+        stmt = select(Account).where(Account.email == sign_in_account.email, Account.password == sign_in_account.password)
+        result = await session.execute(stmt)
+        account = result.scalar_one_or_none()
+
+        if account is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+
+        account_load = AccountLoad.model_validate(account)
+
         return account_load

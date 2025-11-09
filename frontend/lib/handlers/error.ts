@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 import {
   RequestError,
   UnauthorizedError,
@@ -23,7 +25,7 @@ const formatResponse = (
   };
 
   return responseType === "api"
-    ? responseContent.json(responseContent, { statusCode, errors })
+    ? NextResponse.json(responseContent, { statusCode, errors })
     : { statusCode, ...responseContent };
 };
 
@@ -44,7 +46,7 @@ const handleError = (error: unknown, responseType: ResponseType = "server") => {
 
   if (error instanceof ZodError) {
     const validationError = new ValidationError(
-      z.flattenError(error).fieldErrors as Record<string, string>
+      z.flattenError(error).fieldErrors as Record<string, string[]>
     );
 
     logger.error(

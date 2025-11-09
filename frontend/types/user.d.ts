@@ -36,11 +36,4 @@ export interface UserLoad extends UserBase {
   updated_at: string;
 }
 
-export interface UserSignInWithOauth {
-  name: string;
-  username: string;
-  email: string;
-  image?: string | null;
-}
-
 export type UserUpdate = Partial<UserBase>;
