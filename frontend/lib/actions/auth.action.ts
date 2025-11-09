@@ -3,6 +3,7 @@
 import {
   AccountCreate,
   AccountLoad,
+  AccountSignInWithCredentials,
   AccountSignUpWithCredentials,
 } from "@/types/account";
 import { ActionResponse, ErrorResponse } from "@/types/global";
@@ -11,9 +12,10 @@ import { SignUpSchema } from "@/lib/validations";
 import handleError from "@/lib/handlers/error";
 import { type UserCreate, UserLoad } from "@/types/user";
 import { apiUser } from "@/lib/api/apiUser";
-import bcrypt from "bcryptjs";
 import { apiAccount } from "@/lib/api/apiAccount";
 import { signIn } from "@/auth";
+import { SignInSchema } from "@/app/(auth)/components/forms/validations";
+import { NotFoundError } from "@/lib/http-errors";
 
 export async function signUpWithCredentials(
   params: AccountSignUpWithCredentials
@@ -45,13 +47,11 @@ export async function signUpWithCredentials(
     }
   }
 
-  const hashedPassword = await bcrypt.hash(password, 12);
-
   const accountCreate: AccountSignUpWithCredentials = {
     name: name,
     username: username,
     email: email,
-    password: hashedPassword,
+    password: password,
   };
 
   const accountCreateResult =
@@ -65,6 +65,34 @@ export async function signUpWithCredentials(
   }
 
   // await signIn("credentials", { email, password, redirect: false });
+
+  return { success: true };
+}
+
+export async function signInWithCredentials(
+  params: AccountSignInWithCredentials
+): Promise<ActionResponse> {
+  const validationResult = await action({
+    params,
+    schema: SignInSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { email, password } = validationResult.params;
+
+  const accountSignInWithCredentials: AccountSignInWithCredentials = {
+    email,
+    password,
+  };
+
+  const accountSignInResult: ActionResponse<AccountLoad> =
+    await apiAccount.signInWithCredentials(accountSignInWithCredentials);
+  if (!accountSignInResult.success) {
+    throw new NotFoundError("Incorrect credentials");
+  }
 
   return { success: true };
 }

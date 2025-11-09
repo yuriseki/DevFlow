@@ -1,7 +1,9 @@
 """This module provides the service for the Account feature."""
 from typing import Type, List
+import bcrypt
 
 from fastapi import HTTPException, status
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func
 
@@ -166,13 +168,14 @@ class AccountService(BaseModelService[Account, AccountCreate, AccountLoad, Accou
             )
             session.add(new_user)
             await session.flush()
-
+            password_hashed = bcrypt.hashpw(account_sign_up_with_credentials.password.encode(), bcrypt.gensalt())
             account = Account(
                 username=account_sign_up_with_credentials.username,
                 image=None,
                 provider="email",
                 provider_account_id=account_sign_up_with_credentials.email,
                 user_id=new_user.id,
+                password=password_hashed,
             )
             session.add(account)
             await session.commit()
@@ -183,13 +186,20 @@ class AccountService(BaseModelService[Account, AccountCreate, AccountLoad, Accou
             return account_load
 
     async def get_account_by_credentials(self, session: AsyncSession, sign_in_account = AccountSignInWithCredentials) -> AccountLoad:
-        stmt = select(Account).where(Account.email == sign_in_account.email, Account.password == sign_in_account.password)
+        stmt = (select(Account)
+                .where(Account.provider_account_id == sign_in_account.email))
         result = await session.execute(stmt)
         account = result.scalar_one_or_none()
 
         if account is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
 
-        account_load = AccountLoad.model_validate(account)
-
-        return account_load
+        # Check hashed password.
+        try :
+            if bcrypt.checkpw(sign_in_account.password.encode(), account.password):
+                account_load = AccountLoad.model_validate(account)
+                return account_load
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Error performing authentication")
