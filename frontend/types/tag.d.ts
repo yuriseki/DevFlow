@@ -14,9 +14,7 @@ export interface Tag extends TagBase {
   questions: Question[];
 }
 
-export interface TagCreate extends TagBase {
-
-}
+export type TagCreate = TagBase;
 
 export interface TagLoad extends TagBase {
   id: number;
@@ -25,4 +23,4 @@ export interface TagLoad extends TagBase {
   num_questions: number;
 }
 
-export type TagUpdate = Partial<TagBase>;
+export type TagUpdate = object;

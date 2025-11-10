@@ -177,34 +177,24 @@ def generate_ts_from_py_model(file_path: Path) -> str:
 
     # Add interfaces
     for interface in sorted_interfaces:
-        extends_str = ""
-        if interface["extends"]:
-            extends_str = f" extends {', '.join(interface['extends'])}"
-
-        # Handle special case for empty 'Update' schemas, converting them to Partial<T>
-        is_update_schema = interface["name"].endswith("Update")
         has_no_fields = not interface["fields"]
-        base_name_from_extends = (
-            interface["extends"][0] if interface["extends"] else None
-        )
-        base_name_from_convention = interface["name"].replace("Update", "Base")
+        has_extends = bool(interface["extends"])
 
-        if is_update_schema and has_no_fields:
-            if base_name_from_extends:
-                output_parts.append(
-                    f"export type {interface['name']} = Partial<{base_name_from_extends}>;"
-                )
-            elif base_name_from_convention in visitor.interfaces:
-                output_parts.append(
-                    f"export type {interface['name']} = Partial<{base_name_from_convention}>;"
-                )
-            continue  # Skip the standard interface generation
+        if has_no_fields:
+            if has_extends:
+                extends_str = ", ".join(interface["extends"])
+                output_parts.append(f"export type {interface['name']} = {extends_str};")
+            else:
+                output_parts.append(f"export type {interface['name']} = object;")
+        else:
+            extends_str = ""
+            if has_extends:
+                extends_str = f" extends {', '.join(interface['extends'])}"
 
-        # Standard interface generation
-        fields_str = "\n".join(interface["fields"])
-        output_parts.append(
-            f"export interface {interface['name']}{extends_str} {{\n{fields_str}\n}}"
-        )
+            fields_str = "\n".join(interface["fields"])
+            output_parts.append(
+                f"export interface {interface['name']}{extends_str} {{\n{fields_str}\n}}"
+            )
 
     return "\n\n".join(output_parts)
 

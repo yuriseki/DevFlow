@@ -22,9 +22,7 @@ export interface Question extends QuestionBase {
   author?: User | null;
 }
 
-export interface QuestionCreate extends QuestionBase {
-
-}
+export type QuestionCreate = QuestionBase;
 
 export interface QuestionLoad extends QuestionBase {
   id: number;
@@ -32,7 +30,7 @@ export interface QuestionLoad extends QuestionBase {
   updated_at: string;
 }
 
-export type QuestionUpdate = Partial<QuestionBase>;
+export type QuestionUpdate = object;
 
 export interface QuestionTagRelationship {
   question_id: number;

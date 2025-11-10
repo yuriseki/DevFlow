@@ -26,9 +26,7 @@ export interface User extends UserBase {
   collection?: UserCollection[] | null;
 }
 
-export interface UserCreate extends UserBase {
-
-}
+export type UserCreate = UserBase;
 
 export interface UserLoad extends UserBase {
   id: number;
@@ -36,4 +34,4 @@ export interface UserLoad extends UserBase {
   updated_at: string;
 }
 
-export type UserUpdate = Partial<UserBase>;
+export type UserUpdate = object;

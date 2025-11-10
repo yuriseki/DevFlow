@@ -19,9 +19,7 @@ export interface Answer extends AnswerBase {
   question: Question;
 }
 
-export interface AnswerCreate extends AnswerBase {
-
-}
+export type AnswerCreate = AnswerBase;
 
 export interface AnswerLoad extends AnswerBase {
   id: number;
@@ -29,4 +27,4 @@ export interface AnswerLoad extends AnswerBase {
   updated_at: string;
 }
 
-export type AnswerUpdate = Partial<AnswerBase>;
+export type AnswerUpdate = object;

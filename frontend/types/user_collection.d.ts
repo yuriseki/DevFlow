@@ -3,9 +3,7 @@
 import { type Question } from '@frontend/types/question';
 import { type User } from '@frontend/types/user';
 
-export interface UserCollectionBase {
-
-}
+export type UserCollectionBase = object;
 
 export interface UserCollection {
   created_at: string;
@@ -29,4 +27,4 @@ export interface UserCollectionLoad extends UserCollectionBase {
   question_id: number;
 }
 
-export type UserCollectionUpdate = Partial<UserCollectionBase>;
+export type UserCollectionUpdate = object;

@@ -23,9 +23,7 @@ export interface Vote extends VoteBase {
   updated_at?: string | null;
 }
 
-export interface VoteCreate extends VoteBase {
-
-}
+export type VoteCreate = VoteBase;
 
 export interface VoteLoad extends VoteBase {
   id: number;
@@ -34,4 +32,4 @@ export interface VoteLoad extends VoteBase {
   value?: string | null;
 }
 
-export type VoteUpdate = Partial<VoteBase>;
+export type VoteUpdate = object;

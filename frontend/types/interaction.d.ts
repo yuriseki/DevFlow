@@ -8,9 +8,7 @@ export enum ActionType {
   TAG = "tag",
 }
 
-export interface InteractionBase {
-
-}
+export type InteractionBase = object;
 
 export interface Interaction extends InteractionBase {
   id?: number | null;
@@ -39,4 +37,4 @@ export interface InteractionLoad extends InteractionBase {
   action_type: ActionType;
 }
 
-export type InteractionUpdate = Partial<InteractionBase>;
+export type InteractionUpdate = object;
