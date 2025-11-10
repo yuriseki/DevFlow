@@ -6,7 +6,7 @@ export enum ActionType {
   UPVOTE = "upvote",
   DOWNVOTE = "downvote",
   TAG = "tag",
-}}
+}
 
 export interface InteractionBase {
 

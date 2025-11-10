@@ -10,12 +10,12 @@ import { ActionResponse, ErrorResponse } from "@/types/global";
 import action from "@/lib/handlers/action";
 import { SignUpSchema } from "@/lib/validations";
 import handleError from "@/lib/handlers/error";
-import { type UserCreate, UserLoad } from "@/types/user";
+import { UserLoad } from "@/types/user";
 import { apiUser } from "@/lib/api/apiUser";
 import { apiAccount } from "@/lib/api/apiAccount";
-import { signIn } from "@/auth";
 import { SignInSchema } from "@/app/(auth)/components/forms/validations";
 import { NotFoundError } from "@/lib/http-errors";
+import { signIn } from "@/auth";
 
 export async function signUpWithCredentials(
   params: AccountSignUpWithCredentials
@@ -64,7 +64,7 @@ export async function signUpWithCredentials(
     throw new Error("Error creating user account");
   }
 
-  // await signIn("credentials", { email, password, redirect: false });
+  await signIn("credentials", { email, password, redirect: false });
 
   return { success: true };
 }
@@ -94,5 +94,6 @@ export async function signInWithCredentials(
     throw new NotFoundError("Incorrect credentials");
   }
 
+  await signIn("credentials", { email, password, redirect: false });
   return { success: true };
 }

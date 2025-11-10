@@ -166,7 +166,7 @@ def generate_ts_from_py_model(file_path: Path) -> str:
     # Add enums
     for enum_name, members in visitor.enums.items():
         output_parts.append(
-            f"export enum {enum_name} {{\n" + "\n".join(members) + "\n}}"
+            f"export enum {enum_name} {{\n" + "\n".join(members) + "\n}"
         )
 
     # Sort interfaces to ensure base classes are defined before derived ones.

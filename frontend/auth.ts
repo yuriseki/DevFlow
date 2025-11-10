@@ -11,8 +11,7 @@ import { UserCreate, UserLoad } from "@/types/user";
 import { ActionResponse } from "@/types/global";
 import { SignInSchema } from "@/app/(auth)/components/forms/validations";
 import { apiUser } from "@/lib/api/apiUser";
-import bcrypt from "bcryptjs";
-
+import * as z from "zod";
 import Credentials from "next-auth/providers/credentials";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -20,16 +19,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     GitHub,
     Google,
     Credentials({
-      async authorize(credentials) {
+      async authorize(
+        credentials: Partial<Record<keyof z.infer<typeof SignInSchema>, string>>
+      ) {
         const validatedFields = SignInSchema.safeParse(credentials);
         if (validatedFields.success) {
           const { email, password } = validatedFields.data;
 
-          const hashedPassword = await bcrypt.hash(password, 12);
-
           const signInAccount: AccountSignInWithCredentials = {
             email,
-            hashedPassword,
+            password,
           };
 
           const { data: existingAccount } =
@@ -63,21 +62,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id = token.sub as string;
       return session;
     },
-    async jwt({ token, account }) {
-      if (account) {
-        const { data: existingAccount, success } =
-          (await apiAccount.loadByProviderAccountId(
-            account.type === "credentials"
-              ? token.email!
-              : account.providerAccountId
-          )) as ActionResponse<AccountLoad>;
+    async jwt({ token, user, account }) {
+      if (account && user) {
+        if (account.type === "credentials") {
+          token.sub = user.id;
+        } else {
+          const { data: existingAccount, success } =
+            (await apiAccount.loadByProviderAccountId(
+              account.providerAccountId
+            )) as ActionResponse<AccountLoad>;
 
-        if (!success || !existingAccount) {
-          return token;
+          if (success && existingAccount) {
+            const userId = existingAccount.user_id;
+            if (userId) token.sub = userId.toString();
+          }
         }
-
-        const userId = existingAccount.user_id;
-        if (userId) token.sub = userId.toString();
       }
 
       return token;

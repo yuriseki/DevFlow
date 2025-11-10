@@ -3,12 +3,12 @@
 export enum TargetVote {
   ANSWER = "answer",
   QUESTION = "question",
-}}
+}
 
 export enum VoteType {
   UPVOTE = "upvote",
   DOWNVOTE = "downvote",
-}}
+}
 
 export interface VoteBase {
   user_id: number;
