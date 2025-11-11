@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AskQuestionSchema } from "@/app/(root)/ask-question/components/validation";
@@ -18,10 +18,12 @@ import { MDXEditorMethods } from "@mdxeditor/editor";
 import dynamic from "next/dynamic";
 import TagCard from "@/app/components/cards/TagCard";
 import { z } from "zod";
-import { apiQuestion } from "@/lib/api/apiQuestion";
 import type { QuestionCreate } from "@/types/question";
-import { auth } from "@/auth";
 import { createQuestion } from "@/lib/actions/questions.action";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import ROUTES from "@/constants/routes";
+import { ReloadIcon } from "@radix-ui/react-icons";
 
 // This is the only place InitializedMDXEditor is imported directly.
 const Editor = dynamic(() => import("@/app/components/editor"), {
@@ -30,7 +32,9 @@ const Editor = dynamic(() => import("@/app/components/editor"), {
 });
 
 const QuestionForm = () => {
+  const router = useRouter();
   const editorRef = React.useRef<MDXEditorMethods>(null);
+  const [isPending, startTransition] = useTransition();
   const form = useForm({
     resolver: zodResolver(AskQuestionSchema),
     defaultValues: {
@@ -70,14 +74,21 @@ const QuestionForm = () => {
   const handleCreateQuestion = async (
     data: z.infer<typeof AskQuestionSchema>
   ) => {
-    console.log(data);
-    const questionCreate: QuestionCreate = {
-      title: data.title,
-      content: data.content,
-      tags: data.tags,
-      author_id: 0,
-    };
-    await createQuestion(questionCreate);
+    startTransition(async () => {
+      const questionCreate: QuestionCreate = {
+        title: data.title,
+        content: data.content,
+        tags: data.tags,
+        author_id: 0,
+      };
+      const result = await createQuestion(questionCreate);
+      if (result.success) {
+        toast.success("Question successfully created!");
+        if (result.data) router.push(ROUTES.QUESTION(result.data.id));
+      } else {
+        toast.error(result.error?.message || "Something went wrong");
+      }
+    });
   };
   const handleTagRemove = (tag: string, field: { value: string[] }) => {
     const newTags = field.value.filter((t) => t !== tag);
@@ -189,9 +200,17 @@ const QuestionForm = () => {
         <div className="mt-16 flex justify-end">
           <Button
             type="submit"
+            disabled={isPending}
             className="primary-gradient text-light-900 w-fit"
           >
-            Ask a Question
+            {isPending ? (
+              <>
+                <ReloadIcon className="mr-2 size-4 animate-spin" />
+                <span className="ml-2">Submiting</span>
+              </>
+            ) : (
+              <>Ask a Question</>
+            )}
           </Button>
         </div>
       </form>

@@ -1,6 +1,6 @@
 "use server";
 
-import { QuestionCreate } from "@/types/question";
+import { QuestionCreate, QuestionLoad } from "@/types/question";
 import { ActionResponse, ErrorResponse } from "@/types/global";
 import action from "@/lib/handlers/action";
 import { AskQuestionSchema } from "@/app/(root)/ask-question/components/validation";
@@ -9,7 +9,7 @@ import handleError from "@/lib/handlers/error";
 
 export async function createQuestion(
   params: QuestionCreate
-): Promise<ActionResponse> {
+): Promise<ActionResponse<QuestionLoad>> {
   const validationResult = await action({
     params,
     schema: AskQuestionSchema,
@@ -30,5 +30,5 @@ export async function createQuestion(
     return handleError(result.error) as ErrorResponse;
   }
 
-  return { success: result.success };
+  return { success: result.success, data: result.data };
 }
