@@ -45,12 +45,13 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
             return self.load_schema.model_validate(db_obj)
         return None
 
-    async def create(self, session: AsyncSession, obj_in: CreateSchemaType) -> LoadSchemaType:
+    async def create(self, session: AsyncSession, obj_in: CreateSchemaType, commit: bool = True) -> LoadSchemaType:
         """Creates a new model instance.
 
         Args:
             session: The database session.
             obj_in: The create schema with the data for the new model instance.
+            commit: Whether to commit the new model instance.
 
         Returns:
             The created model instance as a load schema.
@@ -62,20 +63,23 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
         session.add(obj)
         try:
             await session.flush()
-            await session.commit()
-            await session.refresh(obj)
+            if commit:
+                await session.commit()
+                await session.refresh(obj)
+
             return self.load_schema.model_validate(obj)
         except IntegrityError as e:
             await session.rollback()
             raise e
 
-    async def update(self, session: AsyncSession, db_obj: ModelType, obj_in: UpdateSchemaType) -> LoadSchemaType:
+    async def update(self, session: AsyncSession, db_obj: ModelType, obj_in: UpdateSchemaType, commit: bool = True) -> LoadSchemaType:
         """Updates a model instance.
 
         Args:
             session: The database session.
             db_obj: The model instance to update.
             obj_in: The update schema with the new data.
+            commit: Whether to commit the new model instance.
 
         Returns:
             The updated model instance as a load schema.
@@ -86,18 +90,23 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
         for field, value in obj_in.model_dump(exclude_unset=True).items():
             setattr(db_obj, field, value)
         session.add(db_obj)
-        await session.commit()
-        await session.refresh(db_obj)
+
+        if commit:
+            await session.commit()
+            await session.refresh(db_obj)
+
         return self.load_schema.model_validate(db_obj)
 
-    async def delete(self, session: AsyncSession, db_obj: ModelType) -> None:
+    async def delete(self, session: AsyncSession, db_obj: ModelType, commit: bool = True) -> None:
         """Deletes a model instance.
 
         Args:
             session: The database session.
             db_obj: The model instance to delete.
+            commit: Whether to commit the model instance.
         """
         result = await session.execute(select(self.model).where(self.model.id == db_obj.id))
         db_obj = result.scalar_one_or_none()
         await session.delete(db_obj)
-        await session.commit()
+        if commit:
+            await session.commit()

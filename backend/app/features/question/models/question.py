@@ -32,12 +32,15 @@ class Question(QuestionBase, table=True):
     author: Optional["User"] = Relationship(back_populates="questions")
 
 
-class QuestionCreate(QuestionBase):
+class QuestionCreate(SQLModel):
     """Schema for creating a new Question.
 
     This schema is used in the create endpoint.
     """
-    pass
+    title: str
+    content: str
+    tags: List[str]
+    author_id: int
 
 
 class QuestionUpdate(SQLModel):

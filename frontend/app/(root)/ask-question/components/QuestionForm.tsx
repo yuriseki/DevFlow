@@ -18,6 +18,10 @@ import { MDXEditorMethods } from "@mdxeditor/editor";
 import dynamic from "next/dynamic";
 import TagCard from "@/app/components/cards/TagCard";
 import { z } from "zod";
+import { apiQuestion } from "@/lib/api/apiQuestion";
+import type { QuestionCreate } from "@/types/question";
+import { auth } from "@/auth";
+import { createQuestion } from "@/lib/actions/questions.action";
 
 // This is the only place InitializedMDXEditor is imported directly.
 const Editor = dynamic(() => import("@/app/components/editor"), {
@@ -63,8 +67,17 @@ const QuestionForm = () => {
     }
   };
 
-  const handleCreateQuestion = (data: z.infer<typeof AskQuestionSchema>) => {
+  const handleCreateQuestion = async (
+    data: z.infer<typeof AskQuestionSchema>
+  ) => {
     console.log(data);
+    const questionCreate: QuestionCreate = {
+      title: data.title,
+      content: data.content,
+      tags: data.tags,
+      author_id: 0,
+    };
+    await createQuestion(questionCreate);
   };
   const handleTagRemove = (tag: string, field: { value: string[] }) => {
     const newTags = field.value.filter((t) => t !== tag);

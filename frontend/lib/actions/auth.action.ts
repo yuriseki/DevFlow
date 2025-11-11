@@ -28,7 +28,8 @@ export async function signUpWithCredentials(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { name, username, email, password } = validationResult.params;
+  const { name, username, email, password } =
+    validationResult.params as AccountSignUpWithCredentials;
 
   const existingEmailResult = await apiUser.loadByEmail(email);
   if (existingEmailResult.success) {
@@ -57,7 +58,7 @@ export async function signUpWithCredentials(
     await apiAccount.signUpWithCredentials(accountCreate);
 
   if (!accountCreateResult.success) {
-    if (accountCreateResult.statusCode === 409) {
+    if (accountCreateResult.status === 409) {
       throw new Error("User already exists");
     }
     throw new Error("Error creating user account");
@@ -80,7 +81,8 @@ export async function signInWithCredentials(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { email, password } = validationResult.params;
+  const { email, password } =
+    validationResult.params as AccountSignInWithCredentials;
 
   const accountSignInWithCredentials: AccountSignInWithCredentials = {
     email,

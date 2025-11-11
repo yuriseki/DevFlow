@@ -22,7 +22,12 @@ export interface Question extends QuestionBase {
   author?: User | null;
 }
 
-export type QuestionCreate = QuestionBase;
+export interface QuestionCreate {
+  title: string;
+  content: string;
+  tags: string[];
+  author_id: number;
+}
 
 export interface QuestionLoad extends QuestionBase {
   id: number;
