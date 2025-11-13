@@ -1,7 +1,9 @@
 """This module provides the service for the Question feature."""
 from typing import Type, List
+from fastapi import HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlmodel import select, func
 
 from app.core.lib.base_model_service import BaseModelService
@@ -30,6 +32,15 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         super().__init__(model, create_schema, load_schema, update_schema)
         # The base BaseModelService includes a basic CRUD operation.
         # Feel free to override its functionality for more complex use cases.
+
+    async def load(self, session: AsyncSession, id: int) -> QuestionLoad | None:
+        result = await session.execute(
+            select(Question).where(Question.id == id).options(selectinload(Question.tags))
+        )
+        question = result.scalar_one_or_none()
+        if not question:
+            return None
+        return QuestionLoad.model_validate(question)
 
     async def create(self, session: AsyncSession, question_in: QuestionCreate, commit: bool = True) -> QuestionLoad:
         """Creates a new question, handling the relationship with tags."""
@@ -61,6 +72,59 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         # After the question and relationships are saved, update the tag counts
         if tag_names:
             await self.update_num_questions_in_tags(session, tag_names, commit=True)
+
+        await session.refresh(db_question)
+        return QuestionLoad.model_validate(db_question)
+    
+    async def update(self, session: AsyncSession, question_in: QuestionUpdate, commit: bool = True) -> QuestionLoad:
+        """Updates the question, handling the relationship with tags."""
+        question_data = question_in.model_dump(exclude={'tags'})
+        new_tag_names = [tag_name.lower() for tag_name in getattr(question_in, 'tags', [])]
+
+        # Load the existing question with its tags eagerly
+        stmt = select(Question).where(Question.id == question_data['id']).options(selectinload(Question.tags))
+        result = await session.execute(stmt)
+        db_question = result.scalar_one_or_none()
+
+        if not db_question:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
+
+        # Store original tag names before modification for update_num_questions_in_tags
+        original_tag_names = [tag.name for tag in db_question.tags]
+
+        # Update scalar fields
+        for field, value in question_data.items():
+            setattr(db_question, field, value)
+
+        # Handle tags relationship
+        if new_tag_names:
+            unique_new_tag_names = set(new_tag_names)
+            
+            # Fetch existing tags from DB
+            stmt_tags = select(Tag).where(Tag.name.in_(unique_new_tag_names)).options(selectinload(Tag.questions))
+            result_tags = await session.execute(stmt_tags)
+            existing_tags = result_tags.scalars().all()
+            existing_tag_map = {tag.name: tag for tag in existing_tags}
+
+            processed_tags = []
+            for name in unique_new_tag_names:
+                if name in existing_tag_map:
+                    processed_tags.append(existing_tag_map[name])
+                else:
+                    new_tag = Tag(name=name)
+                    processed_tags.append(new_tag)
+            db_question.tags = processed_tags # Assign new list of tags
+        else:
+            db_question.tags = [] # Clear tags if none provided
+
+        session.add(db_question)
+        await session.commit()
+
+        # After the question and relationships are saved, update the tag counts
+        # We need to update counts for both original and new tags
+        all_affected_tag_names = list(set(original_tag_names + new_tag_names))
+        if all_affected_tag_names:
+            await self.update_num_questions_in_tags(session, all_affected_tag_names, commit=True)
 
         await session.refresh(db_question)
         return QuestionLoad.model_validate(db_question)

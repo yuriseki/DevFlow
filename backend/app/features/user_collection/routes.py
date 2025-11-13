@@ -68,7 +68,7 @@ async def update(user__collection_id: int, user__collection_update: UserCollecti
     db_obj = await user__collection_service.load(session, user__collection_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="UserCollection not found")
-    return await user__collection_service.update(session, db_obj, user__collection_update)
+    return await user__collection_service.update(session, user__collection_update)
 
 
 @router.delete("/delete/{user__collection_id}", status_code=status.HTTP_204_NO_CONTENT)

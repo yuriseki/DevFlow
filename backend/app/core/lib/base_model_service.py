@@ -72,19 +72,18 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
             await session.rollback()
             raise e
 
-    async def update(self, session: AsyncSession, db_obj: ModelType, obj_in: UpdateSchemaType, commit: bool = True) -> LoadSchemaType:
+    async def update(self, session: AsyncSession, obj_in: UpdateSchemaType, commit: bool = True) -> LoadSchemaType:
         """Updates a model instance.
 
         Args:
             session: The database session.
-            db_obj: The model instance to update.
             obj_in: The update schema with the new data.
             commit: Whether to commit the new model instance.
 
         Returns:
             The updated model instance as a load schema.
         """
-        result = await session.execute(select(self.model).where(self.model.id == db_obj.id))
+        result = await session.execute(select(self.model).where(self.model.id == obj_in.id))
         db_obj = result.scalar_one_or_none()
 
         for field, value in obj_in.model_dump(exclude_unset=True).items():

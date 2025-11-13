@@ -68,7 +68,7 @@ async def update(interaction_id: int, interaction_update: InteractionUpdate, ses
     db_obj = await interaction_service.load(session, interaction_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Interaction not found")
-    return await interaction_service.update(session, db_obj, interaction_update)
+    return await interaction_service.update(session, interaction_update)
 
 
 @router.delete("/delete/{interaction_id}", status_code=status.HTTP_204_NO_CONTENT)

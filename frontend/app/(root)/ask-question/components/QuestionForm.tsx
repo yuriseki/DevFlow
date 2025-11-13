@@ -18,8 +18,12 @@ import { MDXEditorMethods } from "@mdxeditor/editor";
 import dynamic from "next/dynamic";
 import TagCard from "@/app/components/cards/TagCard";
 import { z } from "zod";
-import type { QuestionCreate } from "@/types/question";
-import { createQuestion } from "@/lib/actions/questions.action";
+import type {
+  QuestionCreate,
+  QuestionLoad,
+  QuestionUpdate,
+} from "@/types/question";
+import { createQuestion, editQuestion } from "@/lib/actions/questions.action";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import ROUTES from "@/constants/routes";
@@ -31,16 +35,21 @@ const Editor = dynamic(() => import("@/app/components/editor"), {
   ssr: false,
 });
 
-const QuestionForm = () => {
+interface Params {
+  question?: QuestionLoad;
+  isEdit?: boolean;
+}
+
+const QuestionForm = ({ question, isEdit = false }: Params) => {
   const router = useRouter();
   const editorRef = React.useRef<MDXEditorMethods>(null);
   const [isPending, startTransition] = useTransition();
   const form = useForm({
     resolver: zodResolver(AskQuestionSchema),
     defaultValues: {
-      title: "",
-      content: "",
-      tags: [],
+      title: question?.title || "",
+      content: question?.content || "",
+      tags: question?.tags.map((tag) => tag.name) || [],
     },
   });
 
@@ -75,6 +84,27 @@ const QuestionForm = () => {
     data: z.infer<typeof AskQuestionSchema>
   ) => {
     startTransition(async () => {
+      if (isEdit && question?.id) {
+        const questionUpdate: QuestionUpdate = {
+          id: question.id,
+          title: data.title,
+          content: data.content,
+          tags: data.tags,
+          author_id: question.author_id,
+        };
+
+        const result = await editQuestion(questionUpdate);
+
+        if (result.success) {
+          toast.success("Question successfully updated!");
+          if (result.data) router.push(ROUTES.QUESTION(result.data.id));
+        } else {
+          toast.error(result.error?.message || "Something went wrong");
+        }
+
+        return;
+      }
+
       const questionCreate: QuestionCreate = {
         title: data.title,
         content: data.content,
@@ -206,10 +236,10 @@ const QuestionForm = () => {
             {isPending ? (
               <>
                 <ReloadIcon className="mr-2 size-4 animate-spin" />
-                <span className="ml-2">Submiting</span>
+                <span className="ml-2">Submitting</span>
               </>
             ) : (
-              <>Ask a Question</>
+              <>{isEdit ? "Edit" : "Ask a Question"}</>
             )}
           </Button>
         </div>

@@ -68,7 +68,7 @@ async def update(answer_id: int, answer_update: AnswerUpdate, session: AsyncSess
     db_obj = await answer_service.load(session, answer_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found")
-    return await answer_service.update(session, db_obj, answer_update)
+    return await answer_service.update(session, answer_update)
 
 
 @router.delete("/delete/{answer_id}", status_code=status.HTTP_204_NO_CONTENT)

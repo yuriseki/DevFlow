@@ -87,7 +87,7 @@ async def update(user_id: int, user_update: UserUpdate, session: AsyncSession = 
     db_obj = await user_service.load(session, user_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return await user_service.update(session, db_obj, user_update)
+    return await user_service.update(session, user_update)
 
 
 @router.delete("/delete/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

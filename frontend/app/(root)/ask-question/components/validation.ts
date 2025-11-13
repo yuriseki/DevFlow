@@ -18,3 +18,11 @@ export const AskQuestionSchema = z.object({
     .min(1, { error: "At least one tag is required." })
     .max(3, { error: "Cannot add more than 3 tags." }),
 });
+
+export const EditQuestionSchema = AskQuestionSchema.extend({
+  id: z.int().min(1, { error: "ID is required." }),
+});
+
+export const GetQuestionSchema = z.object({
+  id: z.int().min(1, { error: "ID is required." }),
+});

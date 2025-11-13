@@ -2,6 +2,7 @@
 
 import { type Answer } from '@frontend/types/answer';
 import { type Tag } from '@frontend/types/tag';
+import { type TagLoad } from '@frontend/types/tag_load';
 import { type User } from '@frontend/types/user';
 
 export interface QuestionBase {
@@ -33,9 +34,16 @@ export interface QuestionLoad extends QuestionBase {
   id: number;
   created_at: string;
   updated_at: string;
+  tags?: TagLoad[] | null;
 }
 
-export type QuestionUpdate = object;
+export interface QuestionUpdate {
+  id: number;
+  title: string;
+  content: string;
+  tags: string[];
+  author_id: number;
+}
 
 export interface QuestionTagRelationship {
   question_id: number;

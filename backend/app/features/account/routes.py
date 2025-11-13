@@ -68,7 +68,7 @@ async def update(account_id: int, account_update: AccountUpdate, session: AsyncS
     db_obj = await account_service.load(session, account_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
-    return await account_service.update(session, db_obj, account_update)
+    return await account_service.update(session, account_update)
 
 
 @router.delete("/delete/{account_id}", status_code=status.HTTP_204_NO_CONTENT)

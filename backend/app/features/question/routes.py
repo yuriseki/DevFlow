@@ -68,7 +68,7 @@ async def update(question_id: int, question_update: QuestionUpdate, session: Asy
     db_obj = await question_service.load(session, question_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
-    return await question_service.update(session, db_obj, question_update)
+    return await question_service.update(session, question_update)
 
 
 @router.delete("/delete/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -82,7 +82,7 @@ async def delete(question_id: int, session: AsyncSession = Depends(get_session))
     Raises:
         HTTPException: If the Question is not found.
     """
-    db_obj = await question_service.load(session, question_id)
+    db_obj: QuestionLoad = await question_service.load(session, question_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
     await question_service.delete(session, db_obj)

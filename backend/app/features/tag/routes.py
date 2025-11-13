@@ -68,7 +68,7 @@ async def update(tag_id: int, tag_update: TagUpdate, session: AsyncSession = Dep
     db_obj = await tag_service.load(session, tag_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
-    return await tag_service.update(session, db_obj, tag_update)
+    return await tag_service.update(session, tag_update)
 
 
 @router.delete("/delete/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)

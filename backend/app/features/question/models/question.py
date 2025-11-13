@@ -1,9 +1,11 @@
 """This module defines the data models for the Question feature."""
 from datetime import datetime, timezone
-from typing import Optional, TYPE_CHECKING
-import sqlalchemy as sa
-from sqlmodel import SQLModel, Field, Column, func, Relationship
 from typing import List
+from typing import Optional, TYPE_CHECKING
+
+from sqlmodel import SQLModel, Field, Relationship
+
+from app.features.tag.models.tag import TagLoad
 from .question_tag_relationship import QuestionTagRelationship
 
 if TYPE_CHECKING:
@@ -49,7 +51,11 @@ class QuestionUpdate(SQLModel):
     This schema is used in the update endpoint.
     """
     # This is an example field. Replace this with their actual feature fields.
-    pass
+    id: int
+    title: str
+    content: str
+    tags: List[str]
+    author_id: int
 
 
 class QuestionLoad(QuestionBase):
@@ -60,3 +66,5 @@ class QuestionLoad(QuestionBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    tags: List[TagLoad] | None
+

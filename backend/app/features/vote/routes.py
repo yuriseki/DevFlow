@@ -68,7 +68,7 @@ async def update(vote_id: int, vote_update: VoteUpdate, session: AsyncSession = 
     db_obj = await vote_service.load(session, vote_id)
     if not db_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vote not found")
-    return await vote_service.update(session, db_obj, vote_update)
+    return await vote_service.update(session, vote_update)
 
 
 @router.delete("/delete/{vote_id}", status_code=status.HTTP_204_NO_CONTENT)
