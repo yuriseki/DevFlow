@@ -41,8 +41,8 @@ interface AuthFormProps<T extends FieldValues> {
 export default function AuthForm<T extends FieldValues>({
   schema,
   defaultValues,
-  formType,
   onSubmit,
+  formType,
 }: AuthFormProps<T>) {
   const router = useRouter();
 

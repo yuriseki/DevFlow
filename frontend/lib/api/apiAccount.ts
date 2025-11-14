@@ -25,11 +25,13 @@ export const apiAccount = {
       method: "DELETE"
     }),
 
-  loadByProviderAccountId: (provider: string): Promise<ActionResponse<AccountLoad>> =>
-    fetchHandler(`/api/v1/account/provider`, {
-      method: "POST",
-      body: JSON.stringify(provider)
-    }),
+  loadByProviderAccountId: (provider: string): Promise<ActionResponse<AccountLoad>> => {
+    const params = new URLSearchParams();
+    if (provider) params.append('provider', provider);
+    return fetchHandler(`/api/v1/account/provider?${params.toString()}`, {
+      method: "POST"
+    });
+  },
 
   signInWithOauth: (account_with_oauth: AccountSignInWithOauth): Promise<ActionResponse<AccountLoad>> =>
     fetchHandler(`/api/v1/account/sign-in-with-oauth`, {

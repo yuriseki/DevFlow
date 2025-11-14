@@ -1,16 +1,15 @@
 """This module provides the service for the Question feature."""
 from typing import Type, List
-from fastapi import HTTPException
 
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlmodel import select, func
+from sqlmodel import select, func, or_
 
 from app.core.lib.base_model_service import BaseModelService
-from app.features.tag.services.tag_services import TagService
 from ..models.question import Question, QuestionCreate, QuestionLoad, QuestionUpdate
-from ...tag.models.tag import TagCreate, Tag, TagLoad
 from ..models.question_tag_relationship import QuestionTagRelationship
+from ...tag.models.tag import Tag
 
 
 class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, QuestionUpdate]):
@@ -35,7 +34,7 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
 
     async def load(self, session: AsyncSession, id: int) -> QuestionLoad | None:
         result = await session.execute(
-            select(Question).where(Question.id == id).options(selectinload(Question.tags))
+            select(Question).where(Question.id == id).options(selectinload(Question.tags)),
         )
         question = result.scalar_one_or_none()
         if not question:
@@ -75,7 +74,7 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
 
         await session.refresh(db_question)
         return QuestionLoad.model_validate(db_question)
-    
+
     async def update(self, session: AsyncSession, question_in: QuestionUpdate, commit: bool = True) -> QuestionLoad:
         """Updates the question, handling the relationship with tags."""
         question_data = question_in.model_dump(exclude={'tags'})
@@ -99,7 +98,7 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         # Handle tags relationship
         if new_tag_names:
             unique_new_tag_names = set(new_tag_names)
-            
+
             # Fetch existing tags from DB
             stmt_tags = select(Tag).where(Tag.name.in_(unique_new_tag_names)).options(selectinload(Tag.questions))
             result_tags = await session.execute(stmt_tags)
@@ -113,9 +112,9 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
                 else:
                     new_tag = Tag(name=name)
                     processed_tags.append(new_tag)
-            db_question.tags = processed_tags # Assign new list of tags
+            db_question.tags = processed_tags  # Assign new list of tags
         else:
-            db_question.tags = [] # Clear tags if none provided
+            db_question.tags = []  # Clear tags if none provided
 
         session.add(db_question)
         await session.commit()
@@ -151,3 +150,42 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
 
         if commit:
             await session.commit()
+
+    async def get_questions(
+            self,
+            session: AsyncSession,
+            page: int = 1,
+            page_size: int = 10,
+            query: str = "",
+            filter: str = "",
+    ) -> List[QuestionLoad]:
+
+        if filter == 'popular':
+            order = Question.upvotes.desc()
+        else:
+            order = Question.created_at.desc()
+
+        smtm = (
+            select(Question)
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.answers),
+                selectinload(Question.author),
+            )
+            .where(
+                or_(
+                    func.lower(Question.title).like(f"%{query.lower()}%"),
+                    func.lower(Question.content).like(f"%{query.lower()}%"),
+                ),
+            )
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .order_by(order))
+
+        if filter == 'unanswered':
+            smtm = smtm.where(~Question.answers.any())
+
+        result = await session.execute(smtm)
+        questions = result.scalars().all()
+
+        return [QuestionLoad.model_validate(question) for question in questions]

@@ -8,17 +8,21 @@ export const apiUser = {
   getAll: (): Promise<ActionResponse<UserLoad[]>> =>
     fetchHandler(`/api/v1/user`),
 
-  loadByEmail: (email: string): Promise<ActionResponse<UserLoad>> =>
-    fetchHandler(`/api/v1/user/email`, {
-      method: "POST",
-      body: JSON.stringify(email)
-    }),
+  loadByEmail: (email: string): Promise<ActionResponse<UserLoad>> => {
+    const params = new URLSearchParams();
+    if (email) params.append('email', email);
+    return fetchHandler(`/api/v1/user/email?${params.toString()}`, {
+      method: "POST"
+    });
+  },
 
-  loadByUsername: (username: string): Promise<ActionResponse<UserLoad>> =>
-    fetchHandler(`/api/v1/user/username`, {
-      method: "POST",
-      body: JSON.stringify(username)
-    }),
+  loadByUsername: (username: string): Promise<ActionResponse<UserLoad>> => {
+    const params = new URLSearchParams();
+    if (username) params.append('username', username);
+    return fetchHandler(`/api/v1/user/username?${params.toString()}`, {
+      method: "POST"
+    });
+  },
 
   getUser: (userId: number): Promise<ActionResponse<UserLoad>> =>
     fetchHandler(`/api/v1/user/load/${userId}`),

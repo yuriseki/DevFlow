@@ -5,6 +5,7 @@ from app.features.question.models.question import Question, QuestionCreate, Ques
     QuestionUpdate
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
+from typing import List
 
 from .services.question_services import QuestionService
 
@@ -87,3 +88,9 @@ async def delete(question_id: int, session: AsyncSession = Depends(get_session))
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
     await question_service.delete(session, db_obj)
     return {"message": "Question deleted successfully"}
+
+@router.get("/questions", response_model=List[QuestionLoad])
+async def get_questions(page: int = 1, page_size: int = 10, query: str = "", filter: str = "", session: AsyncSession = Depends(get_session)):
+    """Get multiple questions"""
+    questions: List[QuestionLoad] = await question_service.get_questions(session, page, page_size, query, filter)
+    return questions;

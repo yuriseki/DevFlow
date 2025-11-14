@@ -26,6 +26,9 @@ const LocalSearch = ({
   const [searchQuery, setSearchQuery] = useState(query);
 
   useEffect(() => {
+    if (query === searchQuery) {
+      return;
+    }
     const delayDebounceFn = setTimeout(() => {
       if (searchQuery) {
         const newUrl = formUrlQuery({
@@ -50,7 +53,7 @@ const LocalSearch = ({
     return () => {
       clearTimeout(delayDebounceFn);
     };
-  }, [searchQuery, router, searchParams]);
+  }, [searchQuery, route, pathname, router, searchParams, query]);
 
   return (
     <div

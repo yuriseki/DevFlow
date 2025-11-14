@@ -207,7 +207,7 @@ const QuestionForm = ({ question, isEdit = false }: Params) => {
                     {field.value.map((tag: string) => (
                       <TagCard
                         key={tag}
-                        _id={tag}
+                        id={tag}
                         name={tag}
                         compact
                         remove

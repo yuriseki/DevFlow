@@ -37,3 +37,11 @@ export const SignUpSchema = z.object({
       message: "Password must contain at least one special character.",
     }),
 });
+
+export const PaginatedSearchParamsSchema = z.object({
+  page: z.number().int().positive().default(1),
+  pageSize: z.number().int().positive().optional(10),
+  query: z.string().optional(),
+  filter: z.string().optional(),
+  sort: z.string().optional(),
+});

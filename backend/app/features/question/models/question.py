@@ -5,7 +5,9 @@ from typing import Optional, TYPE_CHECKING
 
 from sqlmodel import SQLModel, Field, Relationship
 
+from app.features.answer.models.answer import AnswerLoad
 from app.features.tag.models.tag import TagLoad
+from app.features.user.models.user import UserLoad
 from .question_tag_relationship import QuestionTagRelationship
 
 if TYPE_CHECKING:
@@ -67,4 +69,5 @@ class QuestionLoad(QuestionBase):
     created_at: datetime
     updated_at: datetime
     tags: List[TagLoad] | None
-
+    author: UserLoad
+    answers: List[AnswerLoad] | None

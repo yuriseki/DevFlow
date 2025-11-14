@@ -1,7 +1,11 @@
 "use server";
 
 import { QuestionCreate, QuestionLoad, QuestionUpdate } from "@/types/question";
-import { ActionResponse, ErrorResponse } from "@/types/global";
+import {
+  PaginatedSearchParams,
+  ActionResponse,
+  ErrorResponse,
+} from "@/types/global";
 import action from "@/lib/handlers/action";
 import {
   AskQuestionSchema,
@@ -10,6 +14,7 @@ import {
 } from "@/app/(root)/ask-question/components/validation";
 import { apiQuestion } from "@/lib/api/apiQuestion";
 import handleError from "@/lib/handlers/error";
+import { PaginatedSearchParamsSchema } from "../validations";
 
 export async function createQuestion(
   params: QuestionCreate
@@ -85,4 +90,32 @@ export async function getQuestion(
   }
 
   return { success: result.success, data: result.data };
+}
+
+export async function getQuestions(
+  params: PaginatedSearchParams
+): Promise<ActionResponse<{ questions: QuestionLoad[]; isNext: boolean }>> {
+  const validationResult = await action({
+    params,
+    schema: PaginatedSearchParamsSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { page = 1, pageSize = 10, query = "", filter = "" } = params;
+
+  const result = await apiQuestion.getQuestions(page, pageSize, query, filter);
+
+  if (!result.success) {
+    return handleError(result.error) as ErrorResponse;
+  }
+
+  const hasNext = result.data.length === pageSize;
+
+  return {
+    success: true,
+    data: { questions: result.data, isNext: hasNext },
+  };
 }

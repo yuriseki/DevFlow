@@ -200,6 +200,7 @@ class RouteVisitor(ast.NodeVisitor):
             path_params_in_url = re.findall(r'{(\w+)}', path)
             ts_function_params = []
             body_arg_details = None
+            query_params_details = []
             
             # Collect all Python function arguments
             python_args = []
@@ -208,55 +209,61 @@ class RouteVisitor(ast.NodeVisitor):
             for arg in node.args.kwonlyargs:
                 python_args.append({'name': arg.arg, 'annotation': arg.annotation, 'default': arg.default if hasattr(arg, 'default') else None})
 
+            # Filter out dependencies first
+            valid_args = []
             for arg_info in python_args:
                 arg_name = arg_info['name']
                 arg_annotation_node = arg_info['annotation']
                 arg_default_node = arg_info['default']
-                arg_type_str = get_ts_type(arg_annotation_node)
 
-                # Skip 'self'
                 if arg_name == 'self':
                     continue
 
-                # Skip FastAPI dependency injections (like session: AsyncSession = Depends(...))
                 is_dependency = False
                 if arg_default_node and isinstance(arg_default_node, ast.Call) and isinstance(arg_default_node.func, ast.Name) and arg_default_node.func.id == 'Depends':
                     is_dependency = True
-                if arg_annotation_node and isinstance(arg_annotation_node, ast.Name) and arg_annotation_node.id == 'AsyncSession':
+                
+                arg_type_str_temp = get_ts_type(arg_annotation_node)
+                if 'Session' in arg_type_str_temp:
                     is_dependency = True
+                
                 if is_dependency:
                     continue
+                
+                valid_args.append(arg_info)
 
-                # If it's a path parameter
-                if arg_name in path_params_in_url:
-                    ts_function_params.append(f"{to_camel_case(arg_name)}: number")
+            # Find body argument from valid args for non-GET requests
+            if http_method in ["POST", "PUT"]:
+                for arg_info in valid_args:
+                    arg_name = arg_info['name']
+                    arg_type_str = get_ts_type(arg_info['annotation'])
+                    is_complex_type = arg_type_str and arg_type_str[0].isupper() and "[]" not in arg_type_str and arg_type_str not in PYTHON_TO_TS_TYPE_MAP.values()
+
+                    if is_complex_type and not body_arg_details:
+                        body_arg_details = {"name": arg_name, "type": arg_type_str}
+                        if arg_type_str and arg_type_str[0].isupper():
+                            self.imports.add(arg_type_str)
+                        break
+
+            # Categorize all valid args
+            for arg_info in valid_args:
+                arg_name = arg_info['name']
+                arg_type_str = get_ts_type(arg_info['annotation'])
+
+                if body_arg_details and arg_name == body_arg_details['name']:
+                    ts_function_params.append(f"{arg_name}: {arg_type_str}")
                     continue
 
-                # Check for embedded body (e.g., email: str = Body(..., embed=True))
-                is_embedded_body = False
-                if arg_default_node and isinstance(arg_default_node, ast.Call) and isinstance(arg_default_node.func, ast.Name) and arg_default_node.func.id == 'Body':
-                    for kw in arg_default_node.keywords:
-                        if kw.arg == 'embed' and isinstance(kw.value, ast.Constant) and kw.value.value is True:
-                            is_embedded_body = True
-                
-                if is_embedded_body:
-                    ts_function_params.append(f"{arg_name}: {arg_type_str}")
-                    body_arg_details = {"name": arg_name, "type": arg_type_str, "embed": True}
-                    if arg_type_str and arg_type_str[0].isupper():
-                        self.imports.add(arg_type_str)
-                # If it's a regular body argument (e.g., user: UserCreate)
-                elif arg_annotation_node:
-                    # This is the main body payload
-                    ts_function_params.append(f"{arg_name}: {arg_type_str}")
-                    body_arg_details = {"name": arg_name, "type": arg_type_str}
-                    if arg_type_str and arg_type_str[0].isupper():
-                        self.imports.add(arg_type_str)
-            
-            # Do not set body_arg_details for DELETE requests
+                if arg_name in path_params_in_url:
+                    ts_function_params.append(f"{to_camel_case(arg_name)}: {arg_type_str}")
+                    continue
+
+                ts_function_params.append(f"{to_camel_case(arg_name)}: {arg_type_str}")
+                query_params_details.append({'name': arg_name, 'ts_name': to_camel_case(arg_name), 'type': arg_type_str})
+
             if http_method == "DELETE":
                 body_arg_details = None
 
-            # Simplified function name generation
             func_name = to_camel_case(node.name)
 
             self.routes.append({
@@ -265,6 +272,7 @@ class RouteVisitor(ast.NodeVisitor):
                 "path": path,
                 "ts_params_str": ", ".join(ts_function_params),
                 "body_arg": body_arg_details,
+                "query_params": query_params_details,
                 "response_model": response_model
             })
         self.generic_visit(node)
@@ -291,31 +299,20 @@ def generate_ts_api_calls(file_path: Path, feature_name: str) -> str:
     imports_str += "import { ActionResponse } from '@/types/global';\n"
     if route_visitor.imports:
         type_imports = ", ".join(sorted(list(route_visitor.imports)))
-        # Adjust import path for snake_case filenames
-        # Special handling for user_collection as its type file is user_collection.d.ts
-        # and not usercollection.d.ts
         type_file_name = feature_name
-
         imports_str += f"import {{ type {type_imports} }} from '@/types/{type_file_name}';\n"
 
     api_calls = []
     for route in route_visitor.routes:
         full_path = f"{prefix}{route['path']}"
         
-        # Strip trailing slash unless it's the root path
         if full_path.endswith('/') and full_path != '/':
             full_path = full_path.rstrip('/')
 
-        # Create a mapping from snake_case path param to camelCase path param for URL interpolation
         path_param_map = {param: to_camel_case(param) for param in re.findall(r'{(\w+)}', full_path)}
         
-        # Replace {snake_case_param} with ${camelCaseParam}
-        url = re.sub(r'{(\w+)}', lambda m: f'${{{path_param_map[m.group(1)]}}}', full_path)
-        url = f"`{url}`" # Wrap in backticks for template literal
-
         options = [f'method: "{route["http_method"]}"']
         
-        # Only add body for POST and PUT requests
         if route['body_arg'] and route['http_method'] in ['POST', 'PUT']:
             body_arg = route['body_arg']
             if body_arg.get("embed"):
@@ -324,15 +321,39 @@ def generate_ts_api_calls(file_path: Path, feature_name: str) -> str:
                 options.append(f'body: JSON.stringify({body_arg["name"]})')
         
         options_str = ""
-        # Only add options if there's more than just the method, or if it's not a GET request (to explicitly set method)
         if len(options) > 1 or route['http_method'] not in ['GET']:
             options_joined = ",\n      ".join(options)
             options_str = f", {{\n      {options_joined}\n    }}"
 
-        api_calls.append(
-            f"  {route['name']}: ({route['ts_params_str']}): Promise<ActionResponse<{route['response_model']}>> =>\n"
-            f"    fetchHandler({url}{options_str}),"
-        )
+        # Handle query parameters
+        if route['query_params']:
+            params_body = "    const params = new URLSearchParams();\n"
+            for qp in route['query_params']:
+                ts_name = qp['ts_name']
+                py_name = qp['name']
+                if qp['type'] == 'string':
+                    params_body += f"    if ({ts_name}) params.append('{py_name}', {ts_name});\n"
+                else:
+                    params_body += f"    if ({ts_name} !== undefined && {ts_name} !== null) params.append('{py_name}', {ts_name}.toString());\n"
+
+            base_url_for_template = re.sub(r'{(\w+)}', lambda m: f'${{{path_param_map[m.group(1)]}}}', full_path)
+            url_with_query = f"`{base_url_for_template}?${{params.toString()}}`"
+
+            api_calls.append(
+                f"  {route['name']}: ({route['ts_params_str']}): Promise<ActionResponse<{route['response_model']}>> => {{\n"
+                f"{params_body}"
+                f"    return fetchHandler({url_with_query}{options_str});\n"
+                f"  }},"
+            )
+        else:
+            # Original logic for routes without query params
+            url = re.sub(r'{(\w+)}', lambda m: f'${{{path_param_map[m.group(1)]}}}', full_path)
+            url = f"`{url}`"
+
+            api_calls.append(
+                f"  {route['name']}: ({route['ts_params_str']}): Promise<ActionResponse<{route['response_model']}>> =>\n"
+                f"    fetchHandler({url}{options_str}),"
+            )
 
     api_object_name = f"api{feature_name.title().replace('_', '')}"
     full_api_obj = (
