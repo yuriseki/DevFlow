@@ -1,20 +1,30 @@
 """This module provides the routes for the Question feature."""
 
 from app.core import get_session
-from app.features.question.models.question import Question, QuestionCreate, QuestionLoad, \
-    QuestionUpdate
+from app.features.question.models.question import (
+    Question,
+    QuestionCreate,
+    QuestionLoad,
+    QuestionUpdate,
+)
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List
 
 from .services.question_services import QuestionService
 
-router = APIRouter(
-    prefix="/api/v1/question",
-    tags=["question"]
-)
+# import debugpy
 
-question_service = QuestionService(Question, QuestionCreate, QuestionLoad, QuestionUpdate)
+# debugpy.listen(("0.0.0.0", 8000))
+# print("Waiting for debugger attach...")
+# debugpy.wait_for_client()
+# print("Debugger attached!")
+
+router = APIRouter(prefix="/api/v1/question", tags=["question"])
+
+question_service = QuestionService(
+    Question, QuestionCreate, QuestionLoad, QuestionUpdate
+)
 
 
 @router.get("/load/{question_id}", response_model=QuestionLoad)
@@ -33,12 +43,16 @@ async def get_question(question_id: int, session: AsyncSession = Depends(get_ses
     """
     question = await question_service.load(session, question_id)
     if not question:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Question not found"
+        )
     return question
 
 
 @router.post("/create", response_model=QuestionLoad)
-async def create(question: QuestionCreate, session: AsyncSession = Depends(get_session)):
+async def create(
+    question: QuestionCreate, session: AsyncSession = Depends(get_session)
+):
     """Creates a new Question.
 
     Args:
@@ -51,8 +65,12 @@ async def create(question: QuestionCreate, session: AsyncSession = Depends(get_s
     return await question_service.create(session, question)
 
 
-@router.put('/update/{question_id}', response_model=QuestionLoad)
-async def update(question_id: int, question_update: QuestionUpdate, session: AsyncSession = Depends(get_session)):
+@router.put("/update/{question_id}", response_model=QuestionLoad)
+async def update(
+    question_id: int,
+    question_update: QuestionUpdate,
+    session: AsyncSession = Depends(get_session),
+):
     """Updates a Question.
 
     Args:
@@ -68,7 +86,9 @@ async def update(question_id: int, question_update: QuestionUpdate, session: Asy
     """
     db_obj = await question_service.load(session, question_id)
     if not db_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Question not found"
+        )
     return await question_service.update(session, question_update)
 
 
@@ -83,14 +103,25 @@ async def delete(question_id: int, session: AsyncSession = Depends(get_session))
     Raises:
         HTTPException: If the Question is not found.
     """
-    db_obj: QuestionLoad = await question_service.load(session, question_id)
+    db_obj: QuestionLoad | None = await question_service.load(session, question_id)
     if not db_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Question not found"
+        )
     await question_service.delete(session, db_obj)
     return {"message": "Question deleted successfully"}
 
+
 @router.get("/questions", response_model=List[QuestionLoad])
-async def get_questions(page: int = 1, page_size: int = 10, query: str = "", filter: str = "", session: AsyncSession = Depends(get_session)):
+async def get_questions(
+    page: int = 1,
+    page_size: int = 10,
+    query: str = "",
+    filter: str = "",
+    session: AsyncSession = Depends(get_session),
+):
     """Get multiple questions"""
-    questions: List[QuestionLoad] = await question_service.get_questions(session, page, page_size, query, filter)
-    return questions;
+    questions: List[QuestionLoad] = await question_service.get_questions(
+        session, page, page_size, query, filter
+    )
+    return questions

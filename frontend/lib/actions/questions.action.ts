@@ -82,7 +82,7 @@ export async function getQuestion(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { id } = validationResult.params;
+  const { id } = validationResult.params!;
 
   const result = await apiQuestion.getQuestion(id);
   if (!result.success) {
@@ -112,10 +112,10 @@ export async function getQuestions(
     return handleError(result.error) as ErrorResponse;
   }
 
-  const hasNext = result.data.length === pageSize;
+  const hasNext = result.data!.length === pageSize;
 
   return {
     success: true,
-    data: { questions: result.data, isNext: hasNext },
+    data: { questions: result.data!, isNext: hasNext },
   };
 }

@@ -67,7 +67,7 @@ const TagCard = ({
     </button>
   ) : (
     <Link
-      href={ROUTES.TAGS(id)}
+      href={ROUTES.TAG(id)}
       className="flex justify-between gap-2"
     >
       {content}

@@ -1,4 +1,5 @@
 """This module provides a base service for CRUD operations on a model."""
+
 from typing import Generic, TypeVar, Type
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -10,12 +11,22 @@ CreateSchemaType = TypeVar("CreateSchemaType")
 LoadSchemaType = TypeVar("LoadSchemaType")
 UpdateSchemaType = TypeVar("UpdateSchemaType")
 
-class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, UpdateSchemaType]):
+
+class BaseModelService(
+    Generic[ModelType, CreateSchemaType, LoadSchemaType, UpdateSchemaType]
+):
     """A base class for model services that provides CRUD operations.
 
     This class is generic and can be used with any model and schema types.
     """
-    def __init__(self, model: Type[ModelType], create_schema: Type[CreateSchemaType], load_schema: Type[LoadSchemaType], update_schema: Type[UpdateSchemaType]):
+
+    def __init__(
+        self,
+        model: Type[ModelType],
+        create_schema: Type[CreateSchemaType],
+        load_schema: Type[LoadSchemaType],
+        update_schema: Type[UpdateSchemaType],
+    ):
         """Initializes the BaseModelService.
 
         Args:
@@ -45,7 +56,9 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
             return self.load_schema.model_validate(db_obj)
         return None
 
-    async def create(self, session: AsyncSession, obj_in: CreateSchemaType, commit: bool = True) -> LoadSchemaType:
+    async def create(
+        self, session: AsyncSession, obj_in: CreateSchemaType, commit: bool = True
+    ) -> LoadSchemaType:
         """Creates a new model instance.
 
         Args:
@@ -72,7 +85,9 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
             await session.rollback()
             raise e
 
-    async def update(self, session: AsyncSession, obj_in: UpdateSchemaType, commit: bool = True) -> LoadSchemaType:
+    async def update(
+        self, session: AsyncSession, obj_in: UpdateSchemaType, commit: bool = True
+    ) -> LoadSchemaType:
         """Updates a model instance.
 
         Args:
@@ -83,7 +98,9 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
         Returns:
             The updated model instance as a load schema.
         """
-        result = await session.execute(select(self.model).where(self.model.id == obj_in.id))
+        result = await session.execute(
+            select(self.model).where(self.model.id == obj_in.id)
+        )
         db_obj = result.scalar_one_or_none()
 
         for field, value in obj_in.model_dump(exclude_unset=True).items():
@@ -96,7 +113,9 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
 
         return self.load_schema.model_validate(db_obj)
 
-    async def delete(self, session: AsyncSession, db_obj: ModelType, commit: bool = True) -> None:
+    async def delete(
+        self, session: AsyncSession, db_obj: ModelType, commit: bool = True
+    ) -> None:
         """Deletes a model instance.
 
         Args:
@@ -104,8 +123,11 @@ class BaseModelService(Generic[ModelType, CreateSchemaType, LoadSchemaType, Upda
             db_obj: The model instance to delete.
             commit: Whether to commit the model instance.
         """
-        result = await session.execute(select(self.model).where(self.model.id == db_obj.id))
+        result = await session.execute(
+            select(self.model).where(self.model.id == db_obj.id)
+        )
         db_obj = result.scalar_one_or_none()
         await session.delete(db_obj)
         if commit:
             await session.commit()
+

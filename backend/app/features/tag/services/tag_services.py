@@ -1,8 +1,10 @@
 """This module provides the service for the Tag feature."""
-from typing import Type
+
+from typing import Type, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
+from sqlalchemy.orm import selectinload
+from sqlmodel import select, func, or_
 
 from app.core.lib.base_model_service import BaseModelService
 
@@ -15,8 +17,13 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
     This class inherits from BaseModelService and provides the business logic for the Tag feature.
     """
 
-    def __init__(self, model: Type[Tag] = Tag, create_schema: Type[TagCreate] = TagCreate, load_schema: Type[TagLoad] = TagLoad,
-                 update_schema: Type[TagUpdate] = TagUpdate):
+    def __init__(
+        self,
+        model: Type[Tag] = Tag,
+        create_schema: Type[TagCreate] = TagCreate,
+        load_schema: Type[TagLoad] = TagLoad,
+        update_schema: Type[TagUpdate] = TagUpdate,
+    ):
         """Initializes the TagService.
 
         Args:
@@ -29,7 +36,9 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         # The base BaseModelService includes a basic CRUD operation.
         # Feel free to override its functionality for more complex use cases.
 
-    async def create(self, session: AsyncSession, obj_in: TagCreate, commit: bool = True) -> TagLoad:
+    async def create(
+        self, session: AsyncSession, obj_in: TagCreate, commit: bool = True
+    ) -> TagLoad:
         """Creates a new tag instance."""
         name = obj_in.name.lower().strip()
         tag_load = await self.load_by_name(session, name)
@@ -48,3 +57,44 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
             return tag_load
 
         return None
+
+    async def get_tags(
+        self,
+        session: AsyncSession,
+        page: int = 1,
+        page_size: int = 10,
+        query: str = "",
+        filter: str = "",
+    ) -> List[TagLoad]:
+        """Return a list of tags bases on query"""
+
+        # Default to popular
+        order = Tag.num_questions.desc()
+        if filter == "popular":
+            order = Tag.num_questions.desc()
+        if filter == "recent":
+            order = Tag.created_at.asc()
+        if filter == "oldest":
+            order = Tag.created_at.desc()
+        if filter == "name":
+            order = Tag.name.asc()
+
+        smtm = (
+            select(Tag)
+            .options(selectinload(Tag.questions))
+            .where(
+                or_(
+                    func.lower(Tag.name) == query.lower(),
+                    query == '',
+                )
+            )
+            .limit(page_size)
+            .order_by(order)
+        )
+
+        result = await session.execute(smtm)
+        tags = result.scalars().all()
+
+        tags_load = [TagLoad.model_validate(tag) for tag in tags]
+
+        return tags_load

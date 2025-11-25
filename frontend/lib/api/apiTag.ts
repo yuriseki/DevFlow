@@ -24,4 +24,13 @@ export const apiTag = {
     fetchHandler(`/api/v1/tag/delete/${tagId}`, {
       method: "DELETE"
     }),
+
+  getTags: (page: number, pageSize: number, query: string, filter: string): Promise<ActionResponse<TagLoad[]>> => {
+    const params = new URLSearchParams();
+    if (page !== undefined && page !== null) params.append('page', page.toString());
+    if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
+    if (query) params.append('query', query);
+    if (filter) params.append('filter', filter);
+    return fetchHandler(`/api/v1/tag/tags?${params.toString()}`);
+  },
 };

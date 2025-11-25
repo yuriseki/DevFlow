@@ -10,9 +10,9 @@ from fastfeatures import add_features_routes
 
 @asynccontextmanager
 async def life_span(app: FastAPI):
-    print(f"Server is starting ...")
+    print("Server is starting ...")
     yield
-    print(f"Server has been stopped.")
+    print("Server has been stopped.")
 
 
 app = FastAPI(
@@ -25,7 +25,8 @@ app = FastAPI(
 # Add middleware to prevent CORS issues
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOW_ORIGINS,
+    # allow_origins=settings.ALLOW_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

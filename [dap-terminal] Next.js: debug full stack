@@ -1,0 +1,97 @@
+Debugger attached.
+
+> frontend@0.1.0 dev
+> next dev
+
+Debugger attached.
+Debugger attached.
+   ▲ Next.js 16.0.1 (Turbopack, Cache Components)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.67:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1086ms
+Debugger attached.
+Debugger attached.
+Debugger attached.
+Debugger attached.
+ ○ Compiling / ...
+Error: Route "/" used `searchParams.page`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before acces
+sing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at Home (app/(root)/page.tsx:23:11)
+  21 |   searchParams: { [key: string]: string | undefined };
+  22 | }) => {
+> 23 |   const { page, pageSize, query, filter } = searchParams;
+     |           ^
+  24 |
+  25 |   const result = await getQuestions({
+  26 |     page: Number(page) || 1,
+[2025-11-18 17:31:19.298 -0300] WARN: Request to http://localhost:8000/api/v1/question/questions?page=1&page_size=10 timed out
+[2025-11-18 17:31:19.298 -0300] ERROR: This operation was aborted
+[2025-11-18 17:31:19.298 -0300] ERROR: An unexpected error occurred
+    err: {
+      "type": "Object",
+      "message": "This operation was aborted",
+      "stack":
+          
+    }
+ GET / 200 in 58s (compile: 4.0s, proxy.ts: 240ms, render: 54s)
+[2025-11-18 17:31:26.114 -0300] ERROR: Error fetching http://localhost:8000/api/v1/question/questions?page=1&page_size=10: During prerendering, fetch() rejects when the prerender is complete. Typically these errors are handled by React but if you move fetch() to a different context
+ by using `setTimeout`, `after`, or similar functions you may observe this error and you should handle it in that context. This occurred at route "/".
+[2025-11-18 17:31:26.115 -0300] ERROR: During prerendering, fetch() rejects when the prerender is complete. Typically these errors are handled by React but if you move fetch() to a different context by using `setTimeout`, `after`, or similar functions you may observe this error and
+ you should handle it in that context. This occurred at route "/".
+[2025-11-18 17:31:26.115 -0300] ERROR: An unexpected error occurred
+    err: {
+      "type": "Object",
+      "message": "During prerendering, fetch() rejects when the prerender is complete. Typically these errors are handled by React but if you move fetch() to a different context by using `setTimeout`, `after`, or similar functions you may observe this error and you should handle it
+ in that context. This occurred at route \"/\".",
+      "stack":
+          
+    }
+[2025-11-18 17:31:42.057 -0300] ERROR: Error fetching http://localhost:8000/api/v1/question/questions?page=1&page_size=10: During prerendering, fetch() rejects when the prerender is complete. Typically these errors are handled by React but if you move fetch() to a different context
+ by using `setTimeout`, `after`, or similar functions you may observe this error and you should handle it in that context. This occurred at route "/".
+[2025-11-18 17:31:42.057 -0300] ERROR: During prerendering, fetch() rejects when the prerender is complete. Typically these errors are handled by React but if you move fetch() to a different context by using `setTimeout`, `after`, or similar functions you may observe this error and
+ you should handle it in that context. This occurred at route "/".
+[2025-11-18 17:31:42.057 -0300] ERROR: An unexpected error occurred
+    err: {
+      "type": "Object",
+      "message": "During prerendering, fetch() rejects when the prerender is complete. Typically these errors are handled by React but if you move fetch() to a different context by using `setTimeout`, `after`, or similar functions you may observe this error and you should handle it
+ in that context. This occurred at route \"/\".",
+      "stack":
+          
+    }
+ GET /community 200 in 601ms (compile: 566ms, proxy.ts: 10ms, render: 25ms)
+ GET /collection 200 in 441ms (compile: 412ms, proxy.ts: 11ms, render: 19ms)
+Error: Route "/" used `searchParams.page`. `searchParams` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at Home (app/(root)/page.tsx:23:11)
+  21 |   searchParams: { [key: string]: string | undefined };
+  22 | }) => {
+> 23 |   const { page, pageSize, query, filter } = searchParams;
+     |           ^
+  24 |
+  25 |   const result = await getQuestions({
+  26 |     page: Number(page) || 1,
+ GET / 200 in 48ms (compile: 4ms, proxy.ts: 10ms, render: 34ms)
+[2025-11-18 17:31:49.895 -0300] ERROR: Error fetching http://localhost:8000/api/v1/question/questions?page=1&page_size=10: Not Found
+[2025-11-18 17:31:49.895 -0300] ERROR: SERVER Error: Not Found
+    err: {
+      "type": "RequestError",
+      "message": "Not Found",
+      "stack":
+          RequestError: Not Found
+              at fetchHandler (/home/yuri/ssd2/project-files/Yuri/JavaScriptMastery/next-16-full/frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__65322bcf._.js:306:19)
+              at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+              at async getQuestions (/home/yuri/ssd2/project-files/Yuri/JavaScriptMastery/next-16-full/frontend/.next/dev/server/chunks/ssr/_54382d74._.js:274:20)
+              at async Home (/home/yuri/ssd2/project-files/Yuri/JavaScriptMastery/next-16-full/frontend/.next/dev/server/chunks/ssr/[root-of-the-server]__f05cabff._.js:518:20)
+      "statusCode": 404,
+      "name": "RequestError"
+    }
+[2025-11-18 17:31:49.895 -0300] ERROR: An unexpected error occurred
+    err: {
+      "type": "Object",
+      "message": "Not Found",
+      "stack":
+          
+    }
+

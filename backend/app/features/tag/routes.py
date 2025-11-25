@@ -1,17 +1,14 @@
 """This module provides the routes for the Tag feature."""
 
+from typing import List
 from app.core import get_session
-from app.features.tag.models.tag import Tag, TagCreate, TagLoad, \
-    TagUpdate
+from app.features.tag.models.tag import Tag, TagCreate, TagLoad, TagUpdate
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .services.tag_services import TagService
 
-router = APIRouter(
-    prefix="/api/v1/tag",
-    tags=["tag"]
-)
+router = APIRouter(prefix="/api/v1/tag", tags=["tag"])
 
 tag_service = TagService(Tag, TagCreate, TagLoad, TagUpdate)
 
@@ -32,7 +29,9 @@ async def get_tag(tag_id: int, session: AsyncSession = Depends(get_session)):
     """
     tag = await tag_service.load(session, tag_id)
     if not tag:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found"
+        )
     return tag
 
 
@@ -50,8 +49,10 @@ async def create(tag: TagCreate, session: AsyncSession = Depends(get_session)):
     return await tag_service.create(session, tag)
 
 
-@router.put('/update/{tag_id}', response_model=TagLoad)
-async def update(tag_id: int, tag_update: TagUpdate, session: AsyncSession = Depends(get_session)):
+@router.put("/update/{tag_id}", response_model=TagLoad)
+async def update(
+    tag_id: int, tag_update: TagUpdate, session: AsyncSession = Depends(get_session)
+):
     """Updates a Tag.
 
     Args:
@@ -67,7 +68,9 @@ async def update(tag_id: int, tag_update: TagUpdate, session: AsyncSession = Dep
     """
     db_obj = await tag_service.load(session, tag_id)
     if not db_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found"
+        )
     return await tag_service.update(session, tag_update)
 
 
@@ -84,6 +87,23 @@ async def delete(tag_id: int, session: AsyncSession = Depends(get_session)):
     """
     db_obj = await tag_service.load(session, tag_id)
     if not db_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found"
+        )
     await tag_service.delete(session, db_obj)
     return {"message": "Tag deleted successfully"}
+
+
+@router.get("/tags", response_model=List[TagLoad])
+async def get_tags(
+    page: int = 1,
+    page_size: int = 10,
+    query: str = "",
+    filter: str = "",
+    session: AsyncSession = Depends(get_session),
+):
+    """Get multiple tags"""
+    tags: List[TagLoad] = await tag_service.get_tags(
+        session, page, page_size, query, filter
+    )
+    return tags

@@ -7,6 +7,9 @@ import HomeFilter from "@/app/components/filters/HomeFilter";
 import QuestionCard from "@/app/components/cards/QuestionCard";
 import { auth } from "@/auth";
 import { getQuestions } from "@/lib/actions/questions.action";
+import DataRenderer from "@/components/DataRenderer";
+import { EMPTY_QUESTION } from "@/constants/states";
+import { QuestionLoad } from "@/types/question";
 
 interface SearchParams {
   searchParams: Promise<{ [key: string]: string }>;
@@ -25,6 +28,9 @@ const Home = async ({
     query: query || "",
     filter: filter || "",
   });
+
+  const { data } = result;
+  const { questions } = data || [];
 
   return (
     <>
@@ -46,45 +52,22 @@ const Home = async ({
         />
       </section>
       <HomeFilter />
-      {result.success ? (
-        <div className="mt-10 flex w-full flex-col gap-6">
-          {result.data?.questions && result.data.questions.length > 0 ? (
-            result.data.questions.map((question) => {
-              const questionForCard = {
-                id: question.id,
-                title: question.title,
-                tags: question.tags
-                  ? question.tags.map((tag) => ({ ...tag, id: tag.id }))
-                  : [],
-                author: {
-                  ...question.author,
-                  id: question.author.id,
-                },
-                createdAt: question.created_at,
-                upvotes: question.upvotes || 0,
-                answers: question.answers?.length || 0,
-                views: question.views || 0,
-              };
-              return (
-                <QuestionCard
-                  key={question.id}
-                  question={questionForCard}
-                />
-              );
-            })
-          ) : (
-            <div className="mt-10 flex w-full items-center justify-center">
-              <p className="text-dark400_light700">No questions found.</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="mt-10 flex w-full items-center justify-center">
-          <p className="text-dark400_light700">
-            {result.error?.message || "Failed to fetch questions"}
-          </p>
-        </div>
-      )}
+      <DataRenderer
+        success={result.success}
+        error={result.error}
+        data={questions}
+        empty={EMPTY_QUESTION}
+        render={(questions) => (
+          <div className="mt-10 flex w-full flex-col gap-6">
+            {questions.map((question) => (
+              <QuestionCard
+                key={question.id}
+                question={question}
+              />
+            ))}
+          </div>
+        )}
+      />
     </>
   );
 };
