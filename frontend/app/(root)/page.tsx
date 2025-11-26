@@ -49,6 +49,7 @@ const Home = async ({
           imgSrc="/icons/search.svg"
           placeholder="Search questions..."
           otherClasses="flex-1"
+          iconPosition="left"
         />
       </section>
       <HomeFilter />
