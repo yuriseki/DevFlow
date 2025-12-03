@@ -180,10 +180,11 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             )
             .offset((page - 1) * page_size)
             .limit(page_size)
-            .order_by(order))
+            .order_by(order)
+        )
 
         if filter == 'unanswered':
-            smtm = smtm.where(~Question.answers.any())
+            smtm = smtm.where(Question.answers.any())
 
         result = await session.execute(smtm)
         questions = result.scalars().all()

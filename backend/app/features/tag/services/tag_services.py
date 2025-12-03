@@ -1,12 +1,17 @@
 """This module provides the service for the Tag feature."""
 
-from typing import Type, List
+from typing import List, Type
 
+from sqlalchemy import desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlmodel import select, func, or_
+from sqlmodel import and_, col, func, or_, select
 
 from app.core.lib.base_model_service import BaseModelService
+from app.features.question.models.question import Question, QuestionLoad
+from app.features.question.models.question_tag_relationship import (
+    QuestionTagRelationship,
+)
 
 from ..models.tag import Tag, TagCreate, TagLoad, TagUpdate
 
@@ -85,7 +90,7 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
             .where(
                 or_(
                     func.lower(Tag.name) == query.lower(),
-                    query == '',
+                    query == "",
                 )
             )
             .limit(page_size)
@@ -98,3 +103,34 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         tags_load = [TagLoad.model_validate(tag) for tag in tags]
 
         return tags_load
+
+    async def get_tag_questions(
+        self,
+        session: AsyncSession,
+        tag_id: int,
+        page: int = 1,
+        page_size: int = 10,
+    ) -> List[QuestionLoad]:
+        """Return a list of tags bases on query"""
+
+        smtm = (
+            select(Question)
+            .join(QuestionTagRelationship)
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.answers),
+                selectinload(Queston.author),
+            )
+            .where(and_(Question.id == QuestionTagRelationship.question_id, QuestionTagRelationship.tag_id == tag_id))
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .order_by(desc(col(Question.upvotes)))
+        )
+
+        result = await session.execute(smtm)
+        questions = result.scalars().all()
+
+        questions_load = [QuestionLoad.model_validate(question) for question in questions]
+
+        return questions_load
+    

@@ -1,6 +1,7 @@
 import {
   ActionResponse,
   ErrorResponse,
+  GetTagQuestionParams,
   PaginatedSearchParams,
 } from "@/types/global";
 import { TagLoad } from "@/types/tag";
@@ -8,6 +9,7 @@ import { PaginatedSearchParamsSchema } from "../validations";
 import handleError from "../handlers/error";
 import action from "@/lib/handlers/action";
 import { apiTag } from "@/lib/api/apiTag";
+import { GetQuestionSchema } from "@/app/(root)/ask-question/components/validation";
 
 export const getTags = async (
   params: PaginatedSearchParams
@@ -35,4 +37,32 @@ export const getTags = async (
     success: true,
     data: { tags: result.data!, isNext: hasNext },
   };
+};
+
+export const getTagQuestions = async (
+  params: GetTagQuestionParams
+): Promise<ActionResponse<{ tags: TagLoad[]; isNext: boolean }>> => {
+  const validationResult = await action({
+    params,
+    schema: GetQuestionSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { tagId, page = 1, pageSize = 10, query = "" } = params;
+
+  const result = await apiTag.getTagQuestions(id, page, pageSize, query);
+
+  if (!result.success) {
+    return handleError(result.error) as ErrorResponse;
+  }
+
+  const hasNext = result.data!.length === pageSize;
+
+  return {
+    success: true,
+    data: { questions: result.data!, isNext: hasNext },
+  }
 };

@@ -1,4 +1,4 @@
-import { getTags } from "@/lib/actions/tag.actions";
+import { getTags } from "@/lib/actions/tag.action";
 import React from "react";
 import { RouteParams } from "@/types/global";
 import LocalSearch from "@/app/components/search/LocalSearch";
