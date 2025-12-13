@@ -119,7 +119,7 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
             .options(
                 selectinload(Question.tags),
                 selectinload(Question.answers),
-                selectinload(Queston.author),
+                selectinload(Question.author),
             )
             .where(and_(Question.id == QuestionTagRelationship.question_id, QuestionTagRelationship.tag_id == tag_id))
             .offset((page - 1) * page_size)

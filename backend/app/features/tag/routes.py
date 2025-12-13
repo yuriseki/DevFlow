@@ -2,7 +2,7 @@
 
 from typing import List
 from app.core import get_session
-from app.features.question.models.question import QuestionLoad
+from app.features.question.models.question import Question, QuestionLoad
 from app.features.tag.models.tag import Tag, TagCreate, TagLoad, TagUpdate
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -109,7 +109,7 @@ async def get_tags(
     )
     return tags
 
-@router.get("/{tag_id}/questions", status_code=status.HTTP_204_NO_CONTENT)
+@router.get("/{tag_id}/questions", response_model=List[QuestionLoad])
 async def get_tag_questions(
     tag_id: int,
     page: int = 1,

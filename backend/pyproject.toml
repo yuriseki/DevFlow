@@ -10,7 +10,9 @@ requires-python = ">=3.10"
 dependencies = [
     "fastfeatures (>=0.1.5,<0.2.0)",
     "slugify (>=0.0.1,<0.0.2)",
-    "bcrypt (>=5.0.0,<6.0.0)"
+    "bcrypt (>=5.0.0,<6.0.0)",
+    "sqlalchemy2-stubs (>=0.0.2a38,<0.0.3)",
+    "ruff (>=0.14.7,<0.15.0)"
 
 ]
 
@@ -20,3 +22,25 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
+
+[tool.pyright]
+useLibraryCodeForTypes = true
+typeCheckingMode = "basic"
+
+reportAttributeAccessIssue = "none"
+# reportOptionalMemberAccess = "none"
+# reportGeneralTypeIssues = "none"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.ruff.lint]
+extend-select = ["E", "W", "F"]
+ignore = ["ANN", "TCH"]  # avoid type overlap with Pyright
+

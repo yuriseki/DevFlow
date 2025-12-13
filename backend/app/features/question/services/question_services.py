@@ -1,7 +1,7 @@
 """This module provides the service for the Question feature."""
 from typing import Type, List
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select, func, or_
@@ -73,7 +73,10 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             await self.update_num_questions_in_tags(session, tag_names, commit=True)
 
         await session.refresh(db_question)
-        return QuestionLoad.model_validate(db_question)
+        question_load = QuestionLoad.model_validate(db_question)
+
+        return question_load
+
 
     async def update(self, session: AsyncSession, question_in: QuestionUpdate, commit: bool = True) -> QuestionLoad:
         """Updates the question, handling the relationship with tags."""
@@ -189,4 +192,4 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         result = await session.execute(smtm)
         questions = result.scalars().all()
 
-        return [QuestionLoad.model_validate(question) for question in questions]
+        return [QuestionLoad.model_ validate(question) for question in questions]
