@@ -192,4 +192,4 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         result = await session.execute(smtm)
         questions = result.scalars().all()
 
-        return [QuestionLoad.model_ validate(question) for question in questions]
+        return [QuestionLoad.model_validate(question) for question in questions]

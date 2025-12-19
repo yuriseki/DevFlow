@@ -114,10 +114,11 @@ async def get_tag_questions(
     tag_id: int,
     page: int = 1,
     page_size: int = 10,
+    query: str = "",
     session: AsyncSession = Depends(get_session),
 ):
     """Get questions with a given tag"""
     questions: List[QuestionLoad] = await tag_service.get_tag_questions(
-         session, tag_id, page, page_size
+         session, tag_id, page, page_size, query
     )
     return questions

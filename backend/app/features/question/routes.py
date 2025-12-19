@@ -13,13 +13,6 @@ from typing import List
 
 from .services.question_services import QuestionService
 
-# import debugpy
-
-# debugpy.listen(("0.0.0.0", 8000))
-# print("Waiting for debugger attach...")
-# debugpy.wait_for_client()
-# print("Debugger attached!")
-
 router = APIRouter(prefix="/api/v1/question", tags=["question"])
 
 question_service = QuestionService(

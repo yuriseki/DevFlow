@@ -110,6 +110,7 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         tag_id: int,
         page: int = 1,
         page_size: int = 10,
+        query: str = "",
     ) -> List[QuestionLoad]:
         """Return a list of tags bases on query"""
 
@@ -121,7 +122,16 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
                 selectinload(Question.answers),
                 selectinload(Question.author),
             )
-            .where(and_(Question.id == QuestionTagRelationship.question_id, QuestionTagRelationship.tag_id == tag_id))
+            .where(
+                and_(
+                    Question.id == QuestionTagRelationship.question_id,
+                    QuestionTagRelationship.tag_id == tag_id,
+                    or_(
+                        func.lower(Question.title).like(f"%{query.lower()}%"),
+                        func.lower(Question.content).like(f"%{query.lower()}%"),
+                    ),
+                )
+            )
             .offset((page - 1) * page_size)
             .limit(page_size)
             .order_by(desc(col(Question.upvotes)))
@@ -130,7 +140,8 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         result = await session.execute(smtm)
         questions = result.scalars().all()
 
-        questions_load = [QuestionLoad.model_validate(question) for question in questions]
+        questions_load = [
+            QuestionLoad.model_validate(question) for question in questions
+        ]
 
         return questions_load
-    
