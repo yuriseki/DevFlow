@@ -1,4 +1,3 @@
-import React from "react";
 import { RouteParams } from "@/types/global";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
