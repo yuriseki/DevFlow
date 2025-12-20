@@ -1,26 +1,21 @@
-import React from "react";
 import { Button } from "@/components/ui/button";
 import ROUTES from "@/constants/routes";
 import Link from "next/link";
 import LocalSearch from "@/app/components/search/LocalSearch";
 import HomeFilter from "@/app/components/filters/HomeFilter";
 import QuestionCard from "@/app/components/cards/QuestionCard";
-import { auth } from "@/auth";
 import { getQuestions } from "@/lib/actions/questions.action";
 import DataRenderer from "@/components/DataRenderer";
 import { EMPTY_QUESTION } from "@/constants/states";
 import { QuestionLoad } from "@/types/question";
 
-interface SearchParams {
-  searchParams: Promise<{ [key: string]: string }>;
-}
-
 const Home = async ({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
-  const { page, pageSize, query, filter } = await searchParams;
+  const awaitedParams = await searchParams;
+  const { page, pageSize, query, filter } = awaitedParams;
 
   const result = await getQuestions({
     page: Number(page) || 1,
@@ -29,8 +24,8 @@ const Home = async ({
     filter: filter || "",
   });
 
-  const { data } = result;
-  const { questions } = data || [];
+  const data = result.data;
+  const questions = data?.questions || [];
 
   return (
     <>
@@ -58,7 +53,7 @@ const Home = async ({
         error={result.error}
         data={questions}
         empty={EMPTY_QUESTION}
-        render={(questions) => (
+        render={(questions: QuestionLoad[]) => (
           <div className="mt-10 flex w-full flex-col gap-6">
             {questions.map((question) => (
               <QuestionCard
