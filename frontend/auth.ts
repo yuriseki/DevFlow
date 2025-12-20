@@ -41,15 +41,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
 
           const { data: existingUser } = (await apiUser.getUser(
-            existingAccount.user_id
+            existingAccount.user_id!
           )) as ActionResponse<UserLoad>;
 
           if (existingUser) {
             return {
-              id: existingUser.id,
+              id: existingUser.id.toString(),
               email: existingUser.email,
               name: existingUser.name,
               image: existingUser.image,
+              provider_account_id: existingAccount.provider_account_id,
             };
           }
         }
@@ -60,21 +61,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async session({ session, token }) {
       session.user.id = token.sub as string;
+      (session.user as any).provider_account_id =
+        token.provider_account_id as string;
       return session;
     },
     async jwt({ token, user, account }) {
-      if (account && user) {
+      if (account) {
         if (account.type === "credentials") {
-          token.sub = user.id;
+          token.sub = user!.id;
+          token.provider_account_id = (user as any).provider_account_id;
         } else {
+          token.provider_account_id = account.providerAccountId;
           const { data: existingAccount, success } =
             (await apiAccount.loadByProviderAccountId(
               account.providerAccountId
             )) as ActionResponse<AccountLoad>;
 
           if (success && existingAccount) {
-            const userId = existingAccount.user_id;
-            if (userId) token.sub = userId.toString();
+            token.sub = existingAccount.user_id!.toString();
           }
         }
       }

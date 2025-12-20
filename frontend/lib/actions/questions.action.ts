@@ -1,6 +1,7 @@
 "use server";
 
 import { QuestionCreate, QuestionLoad, QuestionUpdate } from "@/types/question";
+import { AccountLoad } from "@/types/account";
 import {
   PaginatedSearchParams,
   ActionResponse,
@@ -13,6 +14,7 @@ import {
   GetQuestionSchema,
 } from "@/app/(root)/ask-question/components/validation";
 import { apiQuestion } from "@/lib/api/apiQuestion";
+import { apiAccount } from "@/lib/api/apiAccount";
 import handleError from "@/lib/handlers/error";
 import { PaginatedSearchParamsSchema } from "../validations";
 
@@ -29,10 +31,20 @@ export async function createQuestion(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const userId = validationResult?.session?.user?.id;
+  // Replace user.id by user.accounts.provider_account_id, so then I can manage both
+  // cases: email authentication and SSO.
+  const providerAccountId = (validationResult?.session?.user as any)
+    ?.provider_account_id;
+
+  const { data: account } = (await apiAccount.loadByProviderAccountId(
+    providerAccountId
+  )) as ActionResponse<AccountLoad>;
+  if (!account) {
+    return handleError(new Error("Account not found")) as ErrorResponse;
+  }
 
   const questionCreate = params;
-  questionCreate.author_id = parseInt(userId!);
+  questionCreate.author_id = account.user_id!;
 
   const result = await apiQuestion.create(questionCreate);
   if (!result.success) {

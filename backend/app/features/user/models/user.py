@@ -1,4 +1,5 @@
 """This module defines the data models for the User feature."""
+
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
 
@@ -13,6 +14,7 @@ if TYPE_CHECKING:
 
 class UserBase(SQLModel):
     """Base model for User that contains shared fields."""
+
     name: str
     username: str
     email: str
@@ -25,6 +27,7 @@ class UserBase(SQLModel):
 
 class User(UserBase, table=True):
     """Represents the User table in the database."""
+
     id: int | None = Field(primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -39,6 +42,7 @@ class UserCreate(UserBase):
 
     This schema is used in the create endpoint.
     """
+
     pass
 
 
@@ -47,6 +51,7 @@ class UserUpdate(SQLModel):
 
     This schema is used in the update endpoint.
     """
+
     pass
 
 
@@ -55,6 +60,7 @@ class UserLoad(UserBase):
 
     This schema is used in the load and list endpoints.
     """
+
     id: int
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime]

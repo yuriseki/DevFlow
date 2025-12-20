@@ -5,8 +5,8 @@ from typing import Type, List
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy import desc, not_
-from sqlmodel import select, col, func, or_
+from sqlalchemy import not_
+from sqlmodel import select, func, or_
 
 from app.core.lib.base_model_service import BaseModelService
 from ..models.question import Question, QuestionCreate, QuestionLoad, QuestionUpdate
@@ -70,16 +70,17 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
                 if name in existing_tag_map:
                     processed_tags.append(existing_tag_map[name])
                 else:
-                    new_tag = Tag(name=name)
+                    new_tag = Tag(name=name)  # type: ignore[call-arg]
                     processed_tags.append(new_tag)
             db_question.tags = processed_tags
 
         session.add(db_question)
-        await session.commit()
+        if commit:
+            await session.commit()
 
         # After the question and relationships are saved, update the tag counts
         if tag_names:
-            await self.update_num_questions_in_tags(session, tag_names, commit=True)
+            await self.update_num_questions_in_tags(session, tag_names, commit=commit)
 
         # Load the created question with relationships
         result = await session.execute(
@@ -97,8 +98,12 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         question_data = question_in.model_dump(exclude={"tags"})
         new_tag_names = [tag_name.lower() for tag_name in getattr(question_in, "tags", [])]
 
-        # Load the existing question with its tags eagerly
-        stmt = select(Question).where(Question.id == question_data["id"]).options(selectinload(Question.tags))
+        # Load the existing question with its tags, author, and answers eagerly
+        stmt = (
+            select(Question)
+            .where(Question.id == question_data["id"])
+            .options(selectinload(Question.tags), selectinload(Question.author), selectinload(Question.answers))
+        )
         result = await session.execute(stmt)
         db_question = result.scalar_one_or_none()
 
@@ -127,23 +132,25 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
                 if name in existing_tag_map:
                     processed_tags.append(existing_tag_map[name])
                 else:
-                    new_tag = Tag(name=name)
+                    new_tag = Tag(name=name)  # type: ignore[call-arg]
                     processed_tags.append(new_tag)
             db_question.tags = processed_tags  # Assign new list of tags
         else:
             db_question.tags = []  # Clear tags if none provided
 
         session.add(db_question)
-        await session.commit()
+        if commit:
+            await session.commit()
 
         # After the question and relationships are saved, update the tag counts
         # We need to update counts for both original and new tags
         all_affected_tag_names = list(set(original_tag_names + new_tag_names))
         if all_affected_tag_names:
-            await self.update_num_questions_in_tags(session, all_affected_tag_names, commit=True)
+            await self.update_num_questions_in_tags(session, all_affected_tag_names, commit=commit)
 
-        await session.refresh(db_question)
-        return QuestionLoad.from_orm(db_question)  # type: ignore
+        if commit:
+            await session.refresh(db_question)
+        return QuestionLoad.model_validate(db_question)
 
     async def update_num_questions_in_tags(self, session: AsyncSession, tag_names: List[str], commit: bool = True):
         """
