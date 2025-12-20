@@ -1,15 +1,10 @@
 import QuestionCard from "@/app/components/cards/QuestionCard";
-import HomeFilter from "@/app/components/filters/HomeFilter";
 import LocalSearch from "@/app/components/search/LocalSearch";
 import DataRenderer from "@/components/DataRenderer";
-import { Button } from "@/components/ui/button";
 import ROUTES from "@/constants/routes";
 import { EMPTY_QUESTION } from "@/constants/states";
 import { getTagQuestions } from "@/lib/actions/tag.action";
 import { RouteParams } from "@/types/global";
-import { TagLoad } from "@/types/tag";
-import Link from "next/link";
-import { parse } from "path";
 
 const Tags = async ({ params, searchParams }: RouteParams) => {
   const { id } = await params;

@@ -1,4 +1,5 @@
 """This module defines the data models for the Question feature."""
+
 from datetime import datetime, timezone
 from typing import List
 from typing import Optional, TYPE_CHECKING
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 
 class QuestionBase(SQLModel):
     """Base model for Question that contains shared fields."""
+
     title: str
     content: str
     views: int | None
@@ -28,6 +30,7 @@ class QuestionBase(SQLModel):
 
 class Question(QuestionBase, table=True):
     """Represents the Question table in the database."""
+
     id: int | None = Field(primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -41,6 +44,7 @@ class QuestionCreate(SQLModel):
 
     This schema is used in the create endpoint.
     """
+
     title: str
     content: str
     tags: List[str]
@@ -52,6 +56,7 @@ class QuestionUpdate(SQLModel):
 
     This schema is used in the update endpoint.
     """
+
     # This is an example field. Replace this with their actual feature fields.
     id: int
     title: str
@@ -65,9 +70,10 @@ class QuestionLoad(QuestionBase):
 
     This schema is used in the load and list endpoints.
     """
+
     id: int
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime]
     tags: List[TagLoad] | None
-    author: UserLoad
+    author: Optional[UserLoad]
     answers: List[AnswerLoad] | None

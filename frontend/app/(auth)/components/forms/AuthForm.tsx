@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import ROUTES from "@/constants/routes";
 import { ActionResponse } from "@/types/global";
+import { NotFoundError } from "@/lib/http-errors";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 const formSchema = z.object({
@@ -53,18 +54,28 @@ export default function AuthForm<T extends FieldValues>({
   });
 
   const handleSubmit: SubmitHandler<T> = async (data) => {
-    const result = (await onSubmit(data)) as ActionResponse;
+    try {
+      const result = (await onSubmit(data)) as ActionResponse;
 
-    if (result?.success) {
-      const message =
-        formType === "SIGN_IN"
-          ? "Successfully logged in"
-          : "Successfully signed up";
-      toast.success(message);
+      if (result?.success) {
+        const message =
+          formType === "SIGN_IN"
+            ? "Successfully logged in"
+            : "Successfully signed up";
+        toast.success(message);
 
-      router.push(ROUTES.HOME);
-    } else {
-      toast.error(result?.error?.message);
+        router.push(ROUTES.HOME);
+      } else {
+        toast.error(result?.error?.message);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        toast.error("Incorrect email or password");
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     }
   };
 

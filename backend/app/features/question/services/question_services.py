@@ -1,10 +1,12 @@
 """This module provides the service for the Question feature."""
+
 from typing import Type, List
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlmodel import select, func, or_
+from sqlalchemy import desc, not_
+from sqlmodel import select, col, func, or_
 
 from app.core.lib.base_model_service import BaseModelService
 from ..models.question import Question, QuestionCreate, QuestionLoad, QuestionUpdate
@@ -18,8 +20,13 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
     This class inherits from BaseModelService and provides the business logic for the Question feature.
     """
 
-    def __init__(self, model: Type[Question], create_schema: Type[QuestionCreate], load_schema: Type[QuestionLoad],
-                 update_schema: Type[QuestionUpdate]):
+    def __init__(
+        self,
+        model: Type[Question],
+        create_schema: Type[QuestionCreate],
+        load_schema: Type[QuestionLoad],
+        update_schema: Type[QuestionUpdate],
+    ):
         """Initializes the QuestionService.
 
         Args:
@@ -34,7 +41,9 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
 
     async def load(self, session: AsyncSession, id: int) -> QuestionLoad | None:
         result = await session.execute(
-            select(Question).where(Question.id == id).options(selectinload(Question.tags)),
+            select(Question)
+            .where(Question.id == id)
+            .options(selectinload(Question.tags), selectinload(Question.author), selectinload(Question.answers)),
         )
         question = result.scalar_one_or_none()
         if not question:
@@ -43,8 +52,8 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
 
     async def create(self, session: AsyncSession, question_in: QuestionCreate, commit: bool = True) -> QuestionLoad:
         """Creates a new question, handling the relationship with tags."""
-        question_data = question_in.model_dump(exclude={'tags'})
-        tag_names = getattr(question_in, 'tags', [])
+        question_data = question_in.model_dump(exclude={"tags"})
+        tag_names = getattr(question_in, "tags", [])
         tag_names = [tag_name.lower() for tag_name in tag_names]
 
         db_question = Question(**question_data)
@@ -72,19 +81,24 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         if tag_names:
             await self.update_num_questions_in_tags(session, tag_names, commit=True)
 
-        await session.refresh(db_question)
+        # Load the created question with relationships
+        result = await session.execute(
+            select(Question)
+            .where(Question.id == db_question.id)
+            .options(selectinload(Question.tags), selectinload(Question.author), selectinload(Question.answers))
+        )
+        db_question = result.scalar_one()
         question_load = QuestionLoad.model_validate(db_question)
 
         return question_load
 
-
     async def update(self, session: AsyncSession, question_in: QuestionUpdate, commit: bool = True) -> QuestionLoad:
         """Updates the question, handling the relationship with tags."""
-        question_data = question_in.model_dump(exclude={'tags'})
-        new_tag_names = [tag_name.lower() for tag_name in getattr(question_in, 'tags', [])]
+        question_data = question_in.model_dump(exclude={"tags"})
+        new_tag_names = [tag_name.lower() for tag_name in getattr(question_in, "tags", [])]
 
         # Load the existing question with its tags eagerly
-        stmt = select(Question).where(Question.id == question_data['id']).options(selectinload(Question.tags))
+        stmt = select(Question).where(Question.id == question_data["id"]).options(selectinload(Question.tags))
         result = await session.execute(stmt)
         db_question = result.scalar_one_or_none()
 
@@ -129,7 +143,7 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             await self.update_num_questions_in_tags(session, all_affected_tag_names, commit=True)
 
         await session.refresh(db_question)
-        return QuestionLoad.model_validate(db_question)
+        return QuestionLoad.from_orm(db_question)  # type: ignore
 
     async def update_num_questions_in_tags(self, session: AsyncSession, tag_names: List[str], commit: bool = True):
         """
@@ -145,8 +159,9 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
 
         for tag in tags:
             # Recalculate the number of questions for this tag
-            count_stmt = (select(func.count(QuestionTagRelationship.question_id))
-                          .where(QuestionTagRelationship.tag_id == tag.id))
+            count_stmt = select(func.count(QuestionTagRelationship.question_id)).where(
+                QuestionTagRelationship.tag_id == tag.id
+            )
             questions_count = await session.scalar(count_stmt)
             tag.num_questions = questions_count
             session.add(tag)
@@ -155,18 +170,17 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             await session.commit()
 
     async def get_questions(
-            self,
-            session: AsyncSession,
-            page: int = 1,
-            page_size: int = 10,
-            query: str = "",
-            filter: str = "",
+        self,
+        session: AsyncSession,
+        page: int = 1,
+        page_size: int = 10,
+        query: str = "",
+        filter: str = "",
     ) -> List[QuestionLoad]:
-
-        if filter == 'popular':
-            order = Question.upvotes.desc()
+        if filter == "popular":
+            order = Question.upvotes.desc()  # type: ignore
         else:
-            order = Question.created_at.desc()
+            order = Question.created_at.desc()  # type: ignore
 
         smtm = (
             select(Question)
@@ -186,8 +200,8 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             .order_by(order)
         )
 
-        if filter == 'unanswered':
-            smtm = smtm.where(Question.answers.any())
+        if filter == "unanswered":
+            smtm = smtm.where(not_(Question.answers.any()))  # type: ignore
 
         result = await session.execute(smtm)
         questions = result.scalars().all()

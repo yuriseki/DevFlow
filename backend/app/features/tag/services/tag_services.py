@@ -2,7 +2,7 @@
 
 from typing import List, Type
 
-from sqlalchemy import desc
+from sqlalchemy import asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import and_, col, func, or_, select
@@ -41,14 +41,12 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         # The base BaseModelService includes a basic CRUD operation.
         # Feel free to override its functionality for more complex use cases.
 
-    async def create(
-        self, session: AsyncSession, obj_in: TagCreate, commit: bool = True
-    ) -> TagLoad:
+    async def create(self, session: AsyncSession, obj_in: TagCreate, commit: bool = True) -> TagLoad:
         """Creates a new tag instance."""
         name = obj_in.name.lower().strip()
         tag_load = await self.load_by_name(session, name)
-        if not tag_load:
-            tag_load: TagLoad = await super().create(session, obj_in, commit=commit)
+        if tag_load is None:
+            tag_load = await super().create(session, obj_in, commit=commit)
 
         return tag_load
 
@@ -74,15 +72,15 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         """Return a list of tags bases on query"""
 
         # Default to popular
-        order = Tag.num_questions.desc()
+        order = desc(col(Tag.num_questions))
         if filter == "popular":
-            order = Tag.num_questions.desc()
+            order = desc(col(Tag.num_questions))
         if filter == "recent":
-            order = Tag.created_at.asc()
+            order = asc(col(Tag.created_at))
         if filter == "oldest":
-            order = Tag.created_at.desc()
+            order = desc(col(Tag.created_at))
         if filter == "name":
-            order = Tag.name.asc()
+            order = asc(col(Tag.name))
 
         smtm = (
             select(Tag)
@@ -93,6 +91,7 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
                     query == "",
                 )
             )
+            .offset((page - 1) * page_size)
             .limit(page_size)
             .order_by(order)
         )
@@ -140,8 +139,6 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         result = await session.execute(smtm)
         questions = result.scalars().all()
 
-        questions_load = [
-            QuestionLoad.model_validate(question) for question in questions
-        ]
+        questions_load = [QuestionLoad.model_validate(question) for question in questions]
 
         return questions_load

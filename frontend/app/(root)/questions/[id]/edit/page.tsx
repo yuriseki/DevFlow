@@ -1,4 +1,3 @@
-import React from "react";
 import QuestionForm from "@/app/(root)/ask-question/components/QuestionForm";
 import { auth } from "@/auth";
 import { notFound, redirect } from "next/navigation";
@@ -19,8 +18,12 @@ const EditQuestion = async ({ params }: RouteParams) => {
 
   if (!success) return notFound();
 
-  if (parseInt(question?.author_id) !== parseInt(session?.user?.id))
+  if (
+    question?.author?.email !== session?.user?.email ||
+    !session?.user?.email
+  ) {
     return redirect(ROUTES.QUESTION(parseInt(id)));
+  }
 
   return (
     <>

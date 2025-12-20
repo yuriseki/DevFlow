@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Image from "next/image";
 
 interface Props {
-  id: number;
+  id: string;
   name: string;
   imageUrl?: string | null;
   className?: string;

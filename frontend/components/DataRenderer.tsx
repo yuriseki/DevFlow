@@ -83,7 +83,7 @@ const DataRenderer = <T,>({
   data,
   empty = EMPTY_QUESTION,
   render,
-}): Props<T> => {
+}: Props<T>): React.ReactNode => {
   if (!success) {
     return (
       <StateSkeleton
