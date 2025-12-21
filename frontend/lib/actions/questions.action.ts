@@ -6,6 +6,7 @@ import {
   PaginatedSearchParams,
   ActionResponse,
   ErrorResponse,
+  IncrementViewsParams,
 } from "@/types/global";
 import action from "@/lib/handlers/action";
 import {
@@ -14,9 +15,17 @@ import {
   GetQuestionSchema,
 } from "@/app/(root)/ask-question/components/validation";
 import { apiQuestion } from "@/lib/api/apiQuestion";
+
+interface ExtendedUser {
+  id: string;
+  provider_account_id: string;
+}
 import { apiAccount } from "@/lib/api/apiAccount";
 import handleError from "@/lib/handlers/error";
-import { PaginatedSearchParamsSchema } from "../validations";
+import {
+  IncrementViewsSchema,
+  PaginatedSearchParamsSchema,
+} from "../validations";
 
 export async function createQuestion(
   params: QuestionCreate
@@ -33,7 +42,7 @@ export async function createQuestion(
 
   // Replace user.id by user.accounts.provider_account_id, so then I can manage both
   // cases: email authentication and SSO.
-  const providerAccountId = (validationResult?.session?.user as any)
+  const providerAccountId = (validationResult?.session?.user as ExtendedUser)
     ?.provider_account_id;
 
   const { data: account } = (await apiAccount.loadByProviderAccountId(
@@ -130,4 +139,43 @@ export async function getQuestions(
     success: true,
     data: { questions: result.data!, isNext: hasNext },
   };
+}
+
+export async function incrementViews(
+  params: IncrementViewsParams
+): Promise<ActionResponse<{ views: number }>> {
+  const validationResult = await action({
+    params,
+    schema: IncrementViewsSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { questionId } = validationResult.params!;
+
+  try {
+    const response = await apiQuestion.getQuestion(questionId);
+
+    if (!response.success || !response.data) {
+      throw new Error("Question not found");
+    }
+
+    const question = response.data;
+
+    const questionUpdate: QuestionUpdate = {
+      id: question.id,
+      views: (question.views ?? 0) + 1,
+    };
+
+    await apiQuestion.update(questionId, questionUpdate);
+
+    return {
+      success: true,
+      data: { views: questionUpdate.views! },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
 }

@@ -31,7 +31,7 @@ export type UserCreate = UserBase;
 export interface UserLoad extends UserBase {
   id: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string | null;
 }
 
 export type UserUpdate = object;

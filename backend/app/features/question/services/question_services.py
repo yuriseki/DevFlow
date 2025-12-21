@@ -48,6 +48,8 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         question = result.scalar_one_or_none()
         if not question:
             return None
+        # Ensure views is 0 if null from database
+        question.views = question.views or 0
         return QuestionLoad.model_validate(question)
 
     async def create(self, session: AsyncSession, question_in: QuestionCreate, commit: bool = True) -> QuestionLoad:
@@ -89,6 +91,8 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             .options(selectinload(Question.tags), selectinload(Question.author), selectinload(Question.answers))
         )
         db_question = result.scalar_one()
+        # Ensure views is 0 if null from database
+        db_question.views = db_question.views or 0
         question_load = QuestionLoad.model_validate(db_question)
 
         return question_load
@@ -96,7 +100,7 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
     async def update(self, session: AsyncSession, question_in: QuestionUpdate, commit: bool = True) -> QuestionLoad:
         """Updates the question, handling the relationship with tags."""
         question_data = question_in.model_dump(exclude={"tags"})
-        new_tag_names = [tag_name.lower() for tag_name in getattr(question_in, "tags", [])]
+        tags_value = getattr(question_in, "tags", None)
 
         # Load the existing question with its tags, author, and answers eagerly
         stmt = (
@@ -110,46 +114,60 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         if not db_question:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
 
-        # Store original tag names before modification for update_num_questions_in_tags
-        original_tag_names = [tag.name for tag in db_question.tags]
-
         # Update scalar fields
         for field, value in question_data.items():
+            if value is None:
+                continue
+            # Ignore views if it is 0
+            if field == "views" and value == 0:
+                continue
             setattr(db_question, field, value)
 
-        # Handle tags relationship
-        if new_tag_names:
-            unique_new_tag_names = set(new_tag_names)
+        # Handle tags relationship only if tags are provided
+        if tags_value is not None:
+            new_tag_names = [tag_name.lower() for tag_name in tags_value]
 
-            # Fetch existing tags from DB
-            stmt_tags = select(Tag).where(Tag.name.in_(unique_new_tag_names)).options(selectinload(Tag.questions))
-            result_tags = await session.execute(stmt_tags)
-            existing_tags = result_tags.scalars().all()
-            existing_tag_map = {tag.name: tag for tag in existing_tags}
+            # Store original tag names before modification for update_num_questions_in_tags
+            original_tag_names = [tag.name for tag in db_question.tags]
 
-            processed_tags = []
-            for name in unique_new_tag_names:
-                if name in existing_tag_map:
-                    processed_tags.append(existing_tag_map[name])
-                else:
-                    new_tag = Tag(name=name)  # type: ignore[call-arg]
-                    processed_tags.append(new_tag)
-            db_question.tags = processed_tags  # Assign new list of tags
+            if new_tag_names:
+                unique_new_tag_names = set(new_tag_names)
+
+                # Fetch existing tags from DB
+                stmt_tags = select(Tag).where(Tag.name.in_(unique_new_tag_names)).options(selectinload(Tag.questions))
+                result_tags = await session.execute(stmt_tags)
+                existing_tags = result_tags.scalars().all()
+                existing_tag_map = {tag.name: tag for tag in existing_tags}
+
+                processed_tags = []
+                for name in unique_new_tag_names:
+                    if name in existing_tag_map:
+                        processed_tags.append(existing_tag_map[name])
+                    else:
+                        new_tag = Tag(name=name)  # type: ignore[call-arg]
+                        processed_tags.append(new_tag)
+                db_question.tags = processed_tags  # Assign new list of tags
+            else:
+                db_question.tags = []  # Clear tags if empty list provided
+
+            session.add(db_question)
+            if commit:
+                await session.commit()
+
+            # After the question and relationships are saved, update the tag counts
+            # We need to update counts for both original and new tags
+            all_affected_tag_names = list(set(original_tag_names + new_tag_names))
+            if all_affected_tag_names:
+                await self.update_num_questions_in_tags(session, all_affected_tag_names, commit=commit)
         else:
-            db_question.tags = []  # Clear tags if none provided
-
-        session.add(db_question)
-        if commit:
-            await session.commit()
-
-        # After the question and relationships are saved, update the tag counts
-        # We need to update counts for both original and new tags
-        all_affected_tag_names = list(set(original_tag_names + new_tag_names))
-        if all_affected_tag_names:
-            await self.update_num_questions_in_tags(session, all_affected_tag_names, commit=commit)
+            session.add(db_question)
+            if commit:
+                await session.commit()
 
         if commit:
             await session.refresh(db_question)
+        # Ensure views is 0 if null from database
+        db_question.views = db_question.views or 0
         return QuestionLoad.model_validate(db_question)
 
     async def update_num_questions_in_tags(self, session: AsyncSession, tag_names: List[str], commit: bool = True):
@@ -212,5 +230,9 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
 
         result = await session.execute(smtm)
         questions = result.scalars().all()
+
+        # Ensure views is 0 if null from database
+        for question in questions:
+            question.views = question.views or 0
 
         return [QuestionLoad.model_validate(question) for question in questions]

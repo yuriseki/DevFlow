@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { techMap } from "@/lib/TechMap";
+import { number } from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -75,4 +76,18 @@ export function getTechDescription(techName: string): string {
     techDescriptionMap[normalizedTech] ||
     `${techName} is a technology or tool widely used in software development, providing valuable features and capabilities.`
   );
+}
+
+export function formatNumber(n: number) {
+  if (!n) {
+    return 0;
+  }
+
+  if (n >= 1000000) {
+    return (n / 1000000).toFixed(1) + "M";
+  } else if (n >= 1000) {
+    return (n / 1000).toFixed(1) + "K";
+  } else {
+    return n.toString();
+  }
 }

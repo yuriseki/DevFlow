@@ -19,7 +19,7 @@ export type TagCreate = TagBase;
 export interface TagLoad extends TagBase {
   id: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string | null;
   num_questions: number;
 }
 

@@ -24,7 +24,7 @@ export type AnswerCreate = AnswerBase;
 export interface AnswerLoad extends AnswerBase {
   id: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string | null;
 }
 
 export type AnswerUpdate = object;
