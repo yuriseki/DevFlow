@@ -2,7 +2,6 @@ import Metric from "@/app/components/cards/Metric";
 import TagCard from "@/app/components/cards/TagCard";
 import Preview from "@/app/components/editor/preview";
 import UserAvatar from "@/app/components/navigation/UserAvatar";
-import { auth } from "@/auth";
 import ROUTES from "@/constants/routes";
 import { getQuestion, incrementViews } from "@/lib/actions/questions.action";
 import { formatNumber, getTimeStamp } from "@/lib/utils";
@@ -10,18 +9,18 @@ import { RouteParams, Tag } from "@/types/global";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
-
+import AnswerForm from "../../ask-question/components/AnswerForm";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
 
   const { success, data: question } = await getQuestion({
-    id: parseInt(id)
+    id: parseInt(id),
   });
 
   after(async () => {
     await incrementViews({ questionId: parseInt(id) });
-  })
+  });
 
   if (!success || !question) return redirect("/404");
 
@@ -39,9 +38,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
               className="size-[22px]"
               fallbackClassName="text-[10px]"
             />
-            <Link
-              href={ROUTES.PROFILE(author._id)}>
-
+            <Link href={ROUTES.PROFILE(author._id)}>
               <p className="paragraph-semibold text-dark300_light700">
                 {author.name}
               </p>
@@ -56,7 +53,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
         </h2>
       </div>
 
-      <div className="mb-8 mt-5 flex flex-wrap gap-4">
+      <div className="mt-5 mb-8 flex flex-wrap gap-4">
         <Metric
           imgUrl="/icons/clock.svg"
           alt="clock icon"
@@ -80,9 +77,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
         />
       </div>
 
-      <Preview
-        content={content}
-      />
+      <Preview content={content} />
 
       <div className="mt-8 flex flex-wrap gap-2">
         {tags.map((tag: Tag) => (
@@ -94,6 +89,10 @@ const QuestionDetails = async ({ params }: RouteParams) => {
           />
         ))}
       </div>
+
+      <section className="my-5">
+        <AnswerForm></AnswerForm>
+      </section>
     </>
   );
 };
