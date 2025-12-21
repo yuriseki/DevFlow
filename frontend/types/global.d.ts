@@ -57,3 +57,6 @@ interface IncrementViewsParams {
   questionId: number;
 }
 
+interface GetAnswersParams extends PaginatedSearchParams {
+  question_id: number;
+}

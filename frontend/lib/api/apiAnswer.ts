@@ -24,4 +24,11 @@ export const apiAnswer = {
     fetchHandler(`/api/v1/answer/delete/${answerId}`, {
       method: "DELETE"
     }),
+
+  getAnswersForQuestion: (questionId: number, page: number, pageSize: number): Promise<ActionResponse<AnswerLoad[]>> => {
+    const params = new URLSearchParams();
+    if (page !== undefined && page !== null) params.append('page', page.toString());
+    if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
+    return fetchHandler(`/api/v1/answer/answers-for-question/${questionId}?${params.toString()}`);
+  },
 };

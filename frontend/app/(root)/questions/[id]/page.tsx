@@ -10,6 +10,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import AnswerForm from "../../ask-question/components/AnswerForm";
+import { getAnswers } from "@/lib/actions/answer.action";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -23,6 +24,14 @@ const QuestionDetails = async ({ params }: RouteParams) => {
   });
 
   if (!success || !question) return redirect("/404");
+
+  const { success: areAnswersLoaded, data: answersResult, error: answersError } = await getAnswers({
+    question_id: parseInt(id),
+    page: 1,
+    pageSize: 10,
+  })
+
+  console.log("ANSWERS", answersResult);
 
   question.views++;
   const { author, created_at, answers, views, tags, content, title } = question;

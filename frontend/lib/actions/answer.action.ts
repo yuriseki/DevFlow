@@ -1,10 +1,17 @@
 "use server";
 
 import action from "@/lib/handlers/action";
-import { AnswerServeSchema as AnswerServerSchema } from "@/lib/validations";
+import {
+  AnswerServeSchema as AnswerServerSchema,
+  GetAnswersSchema,
+} from "@/lib/validations";
 import { AccountLoad } from "@/types/account";
 import { AnswerCreate, AnswerLoad } from "@/types/answer";
-import { ActionResponse, ErrorResponse } from "@/types/global";
+import {
+  ActionResponse,
+  ErrorResponse,
+  GetAnswersParams,
+} from "@/types/global";
 import { apiAccount } from "../api/apiAccount";
 import { apiAnswer } from "../api/apiAnswer";
 import handleError from "../handlers/error";
@@ -55,4 +62,39 @@ export async function createAnswer(
   }
 
   return { success: result.success, data: result.data };
+}
+
+export async function getAnswers(params: GetAnswersParams): Promise<
+  ActionResponse<{
+    answers: AnswerLoad[];
+    isNext: boolean;
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: GetAnswersSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const {question_id, page = 1, pageSize = 10} = params;
+
+  const result = await apiAnswer.getAnswersForQuestion(
+    question_id,
+    page, 
+    pageSize
+  )
+
+  if (!result.success) {
+    return handleError(result.error) as ErrorResponse;
+  }
+
+  const hasNext = result.data!.length === pageSize;
+
+  return {
+    success: true,
+    data: {answers: result.data!, isNext: hasNext},
+  }
 }
