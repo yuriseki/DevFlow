@@ -48,12 +48,18 @@ export const PaginatedSearchParamsSchema = z.object({
 
 export const GetTagQuestionSchema = PaginatedSearchParamsSchema.extend({
   tagId: z.string().min(1, { message: "Tag ID is required." }),
-})
+});
 
 export const IncrementViewsSchema = z.object({
-  questionId: z.number().int().positive({error: "Question id is required"}),
-})
+  questionId: z.number().int().positive({ error: "Question id is required" }),
+});
 
 export const AnswerSchema = z.object({
-  content: z.string().min(100, {error: "Answeer has to have more than 100 character."}),
-})
+  content: z
+    .string()
+    .min(100, { error: "Answer has to have more than 100 character." }),
+});
+
+export const AnswerServeSchema = AnswerSchema.extend({
+  question_id: z.number().int().min(1, { error: "Question ID is required" }),
+});

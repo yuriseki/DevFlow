@@ -64,7 +64,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
         <Metric
           imgUrl="/icons/message.svg"
           alt="message icon"
-          value={answers}
+          value={answers?.length || 0}
           title=""
           textStyles="small-regular text-dark400_light700"
         />
@@ -80,10 +80,10 @@ const QuestionDetails = async ({ params }: RouteParams) => {
       <Preview content={content} />
 
       <div className="mt-8 flex flex-wrap gap-2">
-        {tags.map((tag: Tag) => (
+        {tags?.map((tag: Tag) => (
           <TagCard
             key={tag.id}
-            id={tag.id as string}
+            id={tag.id.toString()}
             name={tag.name}
             compact
           />
@@ -91,7 +91,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
       </div>
 
       <section className="my-5">
-        <AnswerForm></AnswerForm>
+        <AnswerForm questionId={question.id.toString()}></AnswerForm>
       </section>
     </>
   );

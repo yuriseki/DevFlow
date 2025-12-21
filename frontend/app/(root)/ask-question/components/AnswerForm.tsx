@@ -12,11 +12,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { AnswerSchema } from "@/lib/validations";
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { MDXEditorMethods } from "@mdxeditor/editor";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
+import { createAnswer } from "@/lib/actions/answer.action";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   username: z.string().min(2, {
@@ -29,8 +31,8 @@ const Editor = dynamic(() => import("@/app/components/editor"), {
   ssr: false,
 });
 
-export default function AnswerForm<T extends FieldValues>() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function AnswerForm<T extends FieldValues>({ questionId }: { questionId: string }) {
+  const [isAnswering, startAnswertingTransition] = useTransition()
   const [isAISubmitting, setIsAISubmitting] = useState(false);
 
   // 1. Define your form.
@@ -42,7 +44,20 @@ export default function AnswerForm<T extends FieldValues>() {
   });
 
   const handleSubmit = async (values: z.infer<typeof AnswerSchema>) => {
-    console.log(values);
+    startAnswertingTransition(async () => {
+      const result = await createAnswer({
+        question_id: parseInt(questionId),
+        content: values.content
+      });
+
+      if (result.success) {
+        form.reset();
+
+        toast.success("Yout answer as been posted successfully");
+      } else {
+        toast.error(result.error?.message);
+      }
+    })
   };
 
   const editorRef = React.useRef<MDXEditorMethods>(null);
@@ -102,7 +117,7 @@ export default function AnswerForm<T extends FieldValues>() {
               type="submit"
               className="primary-gradient w-fit"
             >
-              {isSubmitting ? (
+              {isAnswering ? (
                 <>
                   <ReloadIcon className="sizw-4 mr-2 animate-spin" />
                   Posting...

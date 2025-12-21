@@ -77,6 +77,8 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             db_question.tags = processed_tags
 
         session.add(db_question)
+        await session.flush()  # Flush to get the id without committing
+        question_id = db_question.id
         if commit:
             await session.commit()
 
@@ -87,7 +89,7 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         # Load the created question with relationships
         result = await session.execute(
             select(Question)
-            .where(Question.id == db_question.id)
+            .where(Question.id == question_id)
             .options(selectinload(Question.tags), selectinload(Question.author), selectinload(Question.answers))
         )
         db_question = result.scalar_one()

@@ -1,0 +1,58 @@
+"use server";
+
+import action from "@/lib/handlers/action";
+import { AnswerServeSchema as AnswerServerSchema } from "@/lib/validations";
+import { AccountLoad } from "@/types/account";
+import { AnswerCreate, AnswerLoad } from "@/types/answer";
+import { ActionResponse, ErrorResponse } from "@/types/global";
+import { apiAccount } from "../api/apiAccount";
+import { apiAnswer } from "../api/apiAnswer";
+import handleError from "../handlers/error";
+
+interface ExtendedUser {
+  id: string;
+  provider_account_id: string;
+}
+
+type AnswerInput = {
+  content: string;
+  question_id: number;
+};
+
+export async function createAnswer(
+  params: AnswerInput
+): Promise<ActionResponse<AnswerLoad>> {
+  const validationResult = await action({
+    params,
+    schema: AnswerServerSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { content, question_id } = validationResult.params!;
+  const providerAccountId = (validationResult?.session?.user as ExtendedUser)
+    ?.provider_account_id;
+
+  const { data: account } = (await apiAccount.loadByProviderAccountId(
+    providerAccountId
+  )) as ActionResponse<AccountLoad>;
+  if (!account) {
+    return handleError(new Error("Account not fount")) as ErrorResponse;
+  }
+
+  const answerCreate: AnswerCreate = {
+    content,
+    question_id,
+    user_id: account.user_id!,
+  };
+
+  const result = await apiAnswer.create(answerCreate);
+  if (!result.success) {
+    return handleError(result.error) as ErrorResponse;
+  }
+
+  return { success: result.success, data: result.data };
+}
