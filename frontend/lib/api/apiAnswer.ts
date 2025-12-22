@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type AnswerCreate, AnswerLoad, AnswerUpdate } from '@/types/answer';
+import { type AnswerCreate, AnswerLoad, AnswerUpdate, AnswersForQuestionResponse } from '@/types/answer';
 
 export const apiAnswer = {
   getAnswer: (answerId: number): Promise<ActionResponse<AnswerLoad>> =>
@@ -25,7 +25,7 @@ export const apiAnswer = {
       method: "DELETE"
     }),
 
-  getAnswersForQuestion: (questionId: number, page: number, pageSize: number): Promise<ActionResponse<AnswerLoad[]>> => {
+  getAnswersForQuestion: (questionId: number, page: number, pageSize: number): Promise<ActionResponse<AnswersForQuestionResponse>> => {
     const params = new URLSearchParams();
     if (page !== undefined && page !== null) params.append('page', page.toString());
     if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());

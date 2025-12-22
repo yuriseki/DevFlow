@@ -3,10 +3,13 @@
 from typing import List, Type
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import desc, select
+from sqlalchemy.orm import joinedload, selectinload
+from sqlmodel import desc, func, select
+
+from sqlalchemy.exc import IntegrityError
 
 from app.core.lib.base_model_service import BaseModelService
-from ..models.answer import Answer, AnswerCreate, AnswerLoad, AnswerUpdate
+from ..models.answer import Answer, AnswerCreate, AnswerLoad, AnswerUpdate, AnswersForQuestionResponse
 
 
 class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpdate]):
@@ -34,15 +37,28 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
         # The base BaseModelService includes a basic CRUD operation.
         # Feel free to override its functionality for more complex use cases.
 
+    async def create(self, session: AsyncSession, obj_in: AnswerCreate, commit: bool = True) -> AnswerLoad:
+        obj = self.model(**obj_in.model_dump())
+        session.add(obj)
+        try:
+            await session.flush()
+            if commit:
+                await session.commit()
+                await session.refresh(obj, ["user"])
+            return self.load_schema.model_validate(obj)
+        except IntegrityError as e:
+            await session.rollback()
+            raise e
+
     async def get_answers_for_question(
         self,
         session: AsyncSession,
         question_id,
         page: int = 1,
         page_size: int = 10,
-    ) -> List[AnswerLoad]:
+    ) -> AnswersForQuestionResponse:
         """
-        Retrieves answers for a specific question with pagination.
+        Retrieves answers for a specific question with pagination and total count.
 
         Args:
             session (AsyncSession): The async database session.
@@ -51,10 +67,11 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
             page_size (int): Number of answers per page (default 10).
 
         Returns:
-            List[AnswerLoad]: A list of AnswerLoad objects.
+            AnswersForQuestionResponse: Object containing the list of answers and total count.
         """
         smtm = (
             select(Answer)
+            .options(selectinload(Answer.user))
             .where(Answer.question_id == question_id)
             .offset((page - 1) * page_size)
             .limit(page_size)
@@ -63,5 +80,10 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
 
         result = await session.execute(smtm)
         answers = result.scalars().all()
+        answers_list = [AnswerLoad.model_validate(answer) for answer in answers]
 
-        return [AnswerLoad.model_validate(answer) for answer in answers]
+        count_stmt = select(func.count()).select_from(Answer).where(Answer.question_id == question_id)
+        total_result = await session.execute(count_stmt)
+        total = total_result.scalar() or 0
+
+        return AnswersForQuestionResponse(answers=answers_list, total=total)

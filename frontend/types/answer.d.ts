@@ -2,6 +2,7 @@
 
 import { type Question } from '@frontend/types/question';
 import { type User } from '@frontend/types/user';
+import { type UserLoad } from '@frontend/types/user_load';
 
 export interface AnswerBase {
   content: string;
@@ -25,6 +26,12 @@ export interface AnswerLoad extends AnswerBase {
   id: number;
   created_at: string;
   updated_at?: string | null;
+  user?: UserLoad | null;
 }
 
 export type AnswerUpdate = object;
+
+export interface AnswersForQuestionResponse {
+  answers: AnswerLoad[];
+  total: number;
+}

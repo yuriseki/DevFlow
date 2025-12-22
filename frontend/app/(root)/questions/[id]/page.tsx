@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import AnswerForm from "../../ask-question/components/AnswerForm";
 import { getAnswers } from "@/lib/actions/answer.action";
+import AllAnswers from "@/app/components/answers/AllAnswers";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -32,6 +33,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
   })
 
   console.log("ANSWERS", answersResult);
+  const totalAnswers = answersResult?.totalAnswers || 0;
 
   question.views++;
   const { author, created_at, answers, views, tags, content, title } = question;
@@ -98,6 +100,14 @@ const QuestionDetails = async ({ params }: RouteParams) => {
           />
         ))}
       </div>
+      <section className="my-5">
+        <AllAnswers 
+          data={answersResult?.answers}
+          success={areAnswersLoaded}
+          error={answersError}
+          totalAnswers={totalAnswers || 0}
+        />
+      </section>
 
       <section className="my-5">
         <AnswerForm questionId={question.id.toString()}></AnswerForm>

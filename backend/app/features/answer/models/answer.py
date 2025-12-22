@@ -1,9 +1,11 @@
 """This module defines the data models for the Answer feature."""
 
 from datetime import datetime, timezone
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import SQLModel, Field, Column, func, Relationship
+
+from app.features.user.models.user import UserLoad
 
 
 if TYPE_CHECKING:
@@ -58,4 +60,11 @@ class AnswerLoad(AnswerBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime]
-    pass
+    user: Optional[UserLoad] = None
+
+
+class AnswersForQuestionResponse(SQLModel):
+    """Schema for the response of answers for a question endpoint."""
+
+    answers: List[AnswerLoad]
+    total: int

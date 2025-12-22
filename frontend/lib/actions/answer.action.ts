@@ -68,6 +68,7 @@ export async function getAnswers(params: GetAnswersParams): Promise<
   ActionResponse<{
     answers: AnswerLoad[];
     isNext: boolean;
+    totalAnswers: number;
   }>
 > {
   const validationResult = await action({
@@ -79,22 +80,23 @@ export async function getAnswers(params: GetAnswersParams): Promise<
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const {question_id, page = 1, pageSize = 10} = params;
+  const { question_id, page = 1, pageSize = 10 } = params;
 
   const result = await apiAnswer.getAnswersForQuestion(
     question_id,
-    page, 
+    page,
     pageSize
-  )
+  );
 
   if (!result.success) {
     return handleError(result.error) as ErrorResponse;
   }
 
-  const hasNext = result.data!.length === pageSize;
+  const totalAnswers = result.data?.total || 0;
+  const hasNext = totalAnswers > ((page -1) * pageSize) + result.data!.answers.length;
 
   return {
     success: true,
-    data: {answers: result.data!, isNext: hasNext},
-  }
+    data: { answers: result.data!.answers, isNext: hasNext, totalAnswers: totalAnswers },
+  };
 }

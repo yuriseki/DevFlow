@@ -7,6 +7,7 @@ from app.features.answer.models.answer import (
     AnswerCreate,
     AnswerLoad,
     AnswerUpdate,
+    AnswersForQuestionResponse,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -34,9 +35,7 @@ async def get_answer(answer_id: int, session: AsyncSession = Depends(get_session
     """
     answer = await answer_service.load(session, answer_id)
     if not answer:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found")
     return answer
 
 
@@ -75,9 +74,7 @@ async def update(
     """
     db_obj = await answer_service.load(session, answer_id)
     if not db_obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found")
     return await answer_service.update(session, answer_update)
 
 
@@ -94,30 +91,24 @@ async def delete(answer_id: int, session: AsyncSession = Depends(get_session)):
     """
     db_obj = await answer_service.load(session, answer_id)
     if not db_obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found")
     await answer_service.delete(session, db_obj)
     return {"message": "Answer deleted successfully"}
 
 
-@router.get("/answers-for-question/{question_id}", response_model=List[AnswerLoad])
+@router.get("/answers-for-question/{question_id}", response_model=AnswersForQuestionResponse)
 async def get_answers_for_question(
     question_id: int,
     page: int = 1,
     page_size: int = 10,
     session: AsyncSession = Depends(get_session),
 ):
-    """Gets all answer for a given qustion.
+    """Gets all answers for a given question with total count.
 
     Args:
         question_id: The question id.
+        page: The page number.
+        page_size: Number of answers per page.
         session: The database session.
-
-    Raises:
-        HTTPException: If the Answer is not found.
     """
-    answers: List[AnswerLoad] = await answer_service.get_answers_for_question(
-        session, question_id, page, page_size
-    )
-    return answers
+    return await answer_service.get_answers_for_question(session, question_id, page, page_size)
