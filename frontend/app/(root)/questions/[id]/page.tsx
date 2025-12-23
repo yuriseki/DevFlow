@@ -32,7 +32,6 @@ const QuestionDetails = async ({ params }: RouteParams) => {
     pageSize: 10,
   })
 
-  console.log("ANSWERS", answersResult);
   const totalAnswers = answersResult?.totalAnswers || 0;
 
   question.views++;
@@ -106,11 +105,15 @@ const QuestionDetails = async ({ params }: RouteParams) => {
           success={areAnswersLoaded}
           error={answersError}
           totalAnswers={totalAnswers || 0}
-        />
+        />  
       </section>
 
       <section className="my-5">
-        <AnswerForm questionId={question.id.toString()}></AnswerForm>
+        <AnswerForm 
+          questionId={question.id}
+          questionTitle={question.title}
+          questionContent={question.content}
+        />
       </section>
     </>
   );

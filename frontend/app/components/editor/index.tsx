@@ -29,6 +29,7 @@ import {
   MDXEditorMethods,
   DiffSourceToggleWrapper,
   viewMode$,
+  thematicBreakPlugin,
 } from "@mdxeditor/editor";
 import { basicDark } from "cm6-theme-basic-dark";
 import { useTheme } from "next-themes";
@@ -64,6 +65,7 @@ const Editor = ({ value, editorRef, fieldChange }: Props) => {
         markdownShortcutPlugin(),
         tablePlugin(),
         imagePlugin(),
+        thematicBreakPlugin(),
         codeBlockPlugin({ defaultCodeBlockLanguage: "" }),
         codeMirrorPlugin({
           codeBlockLanguages: {

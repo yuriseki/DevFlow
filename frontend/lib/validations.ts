@@ -66,4 +66,14 @@ export const AnswerServeSchema = AnswerSchema.extend({
 
 export const GetAnswersSchema = PaginatedSearchParamsSchema.extend({
   question_id: z.number().int().min(1, { error: "Question ID is required" }),
-})
+});
+
+export const AIAnswerSchema = z.object({
+  question: z.string().min(5, {
+    message: "Question title must be at least 5 characters.",
+  }),
+  content: z.string().min(10, {
+    message: "Question description must have Minimum of 10 characters.",
+  }),
+  userAnswer: z.string().optional(),
+});
