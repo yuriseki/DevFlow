@@ -33,10 +33,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = async () => {
-    "use cache";
-    return await auth();
-  };
+  // const session = async () => {
+  //   // This approach has an issue of always returning authenticated in the 
+  //   // client side.
+  //   "use cache";
+  //   return await auth();
+  // };
+
+  const session = await auth();
 
   return (
     <Suspense>

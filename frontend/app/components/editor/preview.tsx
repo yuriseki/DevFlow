@@ -25,7 +25,7 @@ const Preview = ({ content = "" }: { content: string }) => {
           return part
             .replace(/\\/g, "")
             .replace(/&#x20;/g, "")
-            .replace(/[<>\[\](){}_~|+\-!]/g, "\\$&");
+            // .replace(/[\[\]{}]/g, "\\$&");
         }
       })
       .join("");

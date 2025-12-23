@@ -47,6 +47,7 @@ export default function AnswerForm<T extends FieldValues>({
   const [isAnswering, startAnswertingTransition] = useTransition();
   const [isAISubmitting, setIsAISubmitting] = useState(false);
   const session = useSession();
+  const userId = session.data?.user?.id;
 
   const form = useForm<z.infer<typeof AnswerSchema>>({
     resolver: zodResolver(AnswerSchema),
@@ -79,23 +80,28 @@ export default function AnswerForm<T extends FieldValues>({
   const editorRef = React.useRef<MDXEditorMethods>(null);
 
   const generateAIAnswer = async () => {
-    if (session.status !== "authenticated") {
-      toast.info("You need to be logged in to use this feature.");
+    // if (session.status !== "authenticated") {
+    // For some reason, session.status always returns authenticated. 
+    // Using userId instead make it to work as intended.
+    if (!userId) {
+      return toast.info("You need to be logged in to use this feature.");
     }
 
     setIsAISubmitting(true);
 
+    const userAnswer = editorRef.current?.getMarkdown();
+
     try {
       const { success, data, error } = await apiAI.getAnswer(
         questionTitle,
-        questionContent
+        questionContent,
+        userAnswer,
       );
 
       if (!success) {
         return toast.error(error?.message);
       }
 
-      console.log("data", data);
       let formattedAnswer = data!.replace(/<br>/g, " ").toString().trim();
 
       if (editorRef.current) {

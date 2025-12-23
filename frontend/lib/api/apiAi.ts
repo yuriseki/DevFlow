@@ -7,11 +7,12 @@ const API_BASE_URL =
 export const apiAI = {
   getAnswer: async (
     question: string,
-    content: string
+    content: string,
+    userAnswer?: string,
   ): Promise<ActionResponse<string>> => {
     const req = new Request(API_BASE_URL, {
       method: "POST",
-      body: JSON.stringify({ question, content }),
+      body: JSON.stringify({ question, content, userAnswer }),
     });
     const res = await generateAnswer(req);
     return res.json();
