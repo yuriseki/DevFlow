@@ -27,6 +27,8 @@ import {
   InsertThematicBreak,
   diffSourcePlugin,
   MDXEditorMethods,
+  DiffSourceToggleWrapper,
+  viewMode$,
 } from "@mdxeditor/editor";
 import { basicDark } from "cm6-theme-basic-dark";
 import { useTheme } from "next-themes";
@@ -85,39 +87,42 @@ const Editor = ({ value, editorRef, fieldChange }: Props) => {
         diffSourcePlugin({ viewMode: "rich-text", diffMarkdown: "" }),
         toolbarPlugin({
           toolbarContents: () => (
-            <ConditionalContents
-              options={[
-                {
-                  when: (editor) => editor?.editorType === "codeblock",
-                  contents: () => <ChangeCodeMirrorLanguage />,
-                },
-                {
-                  fallback: () => (
-                    <>
-                      <UndoRedo />
-                      <Separator />
+            <DiffSourceToggleWrapper>
+              <ConditionalContents
+                options={[
+                  {
+                    when: (editor) => editor?.editorType === "codeblock",
+                    contents: () => <ChangeCodeMirrorLanguage />,
+                  },
+                  {
+                    fallback: () => (
+                      <>
+                        <UndoRedo />
+                        <Separator />
 
-                      <BoldItalicUnderlineToggles />
-                      <CodeToggle />
-                      <Separator />
+                        <BoldItalicUnderlineToggles />
+                        <CodeToggle />
+                        <Separator />
 
-                      <ListsToggle />
-                      <Separator />
+                        <ListsToggle />
+                        <Separator />
 
-                      <CreateLink />
-                      <InsertImage />
-                      <Separator />
+                        <CreateLink />
+                        <InsertImage />
+                        <Separator />
 
-                      <InsertTable />
-                      <InsertThematicBreak />
-                      <Separator />
+                        <InsertTable />
+                        <InsertThematicBreak />
+                        <Separator />
 
-                      <InsertCodeBlock />
-                    </>
-                  ),
-                },
-              ]}
-            />
+                        <InsertCodeBlock />
+
+                      </>
+                    ),
+                  },
+                ]}
+              />
+            </DiffSourceToggleWrapper>
           ),
         }),
       ]}
