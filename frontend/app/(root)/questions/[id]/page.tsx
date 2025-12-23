@@ -12,6 +12,7 @@ import { after } from "next/server";
 import AnswerForm from "../../ask-question/components/AnswerForm";
 import { getAnswers } from "@/lib/actions/answer.action";
 import AllAnswers from "@/app/components/answers/AllAnswers";
+import Votes from "@/app/components/votes/Votes";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -55,7 +56,12 @@ const QuestionDetails = async ({ params }: RouteParams) => {
             </Link>
           </div>
           <div className="flex justify-end">
-            <p>Votes</p>
+            <Votes
+              upvotes={question.upvotes}
+              hasUpvoted={true}
+              downvotes={question.downvotes}
+              hasDownvoted={false}
+            />
           </div>
         </div>
         <h2 className="h2-semibold text-dark200_light900 mt-3.5 w-full">
