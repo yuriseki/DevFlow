@@ -1,4 +1,5 @@
 """This module defines the data models for the Vote feature."""
+
 from datetime import datetime, timezone
 from typing import Optional
 import sqlalchemy as sa
@@ -18,6 +19,7 @@ class VoteType(str, Enum):
 
 class VoteBase(SQLModel):
     """Base model for Vote that contains shared fields."""
+
     user_id: int = Field(foreign_key="user.id")
     target_id: int
     target_vote: TargetVote
@@ -26,9 +28,12 @@ class VoteBase(SQLModel):
 
 class Vote(VoteBase, table=True):
     """Represents the Vote table in the database."""
+
     id: int | None = Field(primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
 
 
 class VoteCreate(VoteBase):
@@ -36,6 +41,7 @@ class VoteCreate(VoteBase):
 
     This schema is used in the create endpoint.
     """
+
     pass
 
 
@@ -44,7 +50,12 @@ class VoteUpdate(SQLModel):
 
     This schema is used in the update endpoint.
     """
-    pass
+
+    id: int
+    target_id: int
+    target_vote: TargetVote
+    vote_type: VoteType
+    user_id: int
 
 
 class VoteLoad(VoteBase):
@@ -52,8 +63,24 @@ class VoteLoad(VoteBase):
 
     This schema is used in the load and list endpoints.
     """
+
     id: int
     created_at: datetime
     updated_at: datetime
-    # This is an example field. Replace this with their actual feature fields.
-    value: str | None
+    target_id: int
+    target_vote: TargetVote
+    vote_type: VoteType
+    user_id: int
+
+
+class VoteFind(SQLModel):
+    user_id: int
+    target_id: int
+    target_vote: TargetVote
+
+
+class VoteDoVote(SQLModel):
+    user_id: int
+    target_id: int
+    target_vote: TargetVote
+    vote_type: VoteType

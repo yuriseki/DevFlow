@@ -25,11 +25,33 @@ export interface Vote extends VoteBase {
 
 export type VoteCreate = VoteBase;
 
+export interface VoteDoVote {
+  user_id: number;
+  target_id: number;
+  target_vote: TargetVote;
+  vote_type: VoteType;
+}
+
+export interface VoteFind {
+  user_id: number;
+  target_id: number;
+  target_vote: TargetVote;
+}
+
 export interface VoteLoad extends VoteBase {
   id: number;
   created_at: string;
   updated_at: string;
-  value?: string | null;
+  target_id: number;
+  target_vote: TargetVote;
+  vote_type: VoteType;
+  user_id: number;
 }
 
-export type VoteUpdate = object;
+export interface VoteUpdate {
+  id: number;
+  target_id: number;
+  target_vote: TargetVote;
+  vote_type: VoteType;
+  user_id: number;
+}

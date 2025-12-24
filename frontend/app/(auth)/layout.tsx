@@ -11,7 +11,7 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
             <h1 className="h2-bold text-dark100_light900">Join DEvFlow</h1>
             <p className="paragraph-regular text-dark500_light400">To get your questions answered</p>
           </div>
-          <Image src="images/site-logo.svg" alt="DevFlow Logo" height={50} width={50} className="object-contain" />
+          <Image src="/images/site-logo.svg" alt="DevFlow Logo" height={50} width={50} className="object-contain" />
         </div>
         {children}
         <SocialAuthForm />

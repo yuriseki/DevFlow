@@ -60,3 +60,16 @@ interface IncrementViewsParams {
 interface GetAnswersParams extends PaginatedSearchParams {
   question_id: number;
 }
+
+interface CreateVoteParams {
+  targetId: number;
+  targetType: "question" | "answer";
+  voteType: "upvote" | "downvote";
+}
+
+type HasVotedParams = Pick<CreateVoteParams, "targetId" | "targetType">;
+
+interface HasVotedResponse {
+  hasUpvoted: boolean;
+  hasDownvoted: boolean;
+}

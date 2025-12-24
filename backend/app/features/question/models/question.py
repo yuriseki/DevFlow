@@ -1,6 +1,7 @@
 """This module defines the data models for the Question feature."""
 
 from datetime import datetime, timezone
+from enum import Enum
 from typing import List
 from typing import Optional, TYPE_CHECKING
 

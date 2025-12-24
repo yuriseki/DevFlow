@@ -2,26 +2,18 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type VoteCreate, VoteLoad, VoteUpdate } from '@/types/vote';
+import { type NoneType, VoteDoVote, VoteFind, VoteLoad } from '@/types/vote';
 
 export const apiVote = {
-  getVote: (voteId: number): Promise<ActionResponse<VoteLoad>> =>
-    fetchHandler(`/api/v1/vote/load/${voteId}`),
-
-  create: (vote: VoteCreate): Promise<ActionResponse<VoteLoad>> =>
-    fetchHandler(`/api/v1/vote/create`, {
+  findVote: (vote: VoteFind): Promise<ActionResponse<VoteLoad>> =>
+    fetchHandler(`/api/v1/vote/find-vote`, {
       method: "POST",
       body: JSON.stringify(vote)
     }),
 
-  update: (voteId: number, vote_update: VoteUpdate): Promise<ActionResponse<VoteLoad>> =>
-    fetchHandler(`/api/v1/vote/update/${voteId}`, {
-      method: "PUT",
-      body: JSON.stringify(vote_update)
-    }),
-
-  delete: (voteId: number): Promise<ActionResponse<void>> =>
-    fetchHandler(`/api/v1/vote/delete/${voteId}`, {
-      method: "DELETE"
+  doVote: (vote: VoteDoVote): Promise<ActionResponse<NoneType>> =>
+    fetchHandler(`/api/v1/vote/do-vote`, {
+      method: "POST",
+      body: JSON.stringify(vote)
     }),
 };

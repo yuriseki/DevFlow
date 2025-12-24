@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description:
     "A community-driven platform for asking and answering programming questions. Get help, share knowledge, and collaborate with developers from around the world. Explore topics in web development, mobile app development, algorithms, data structures, and more.",
   icons: {
-    icon: "images/site-logo.svg",
+    icon: "/images/site-logo.svg",
   },
 };
 
@@ -36,14 +36,13 @@ export default async function RootLayout({
   // const session = async () => {
   //   // This approach has an issue of always returning authenticated in the 
   //   // client side.
-  //   "use cache";
+  //   // "use cache";
   //   return await auth();
   // };
 
   const session = await auth();
 
   return (
-    <Suspense>
       <html
         lang="en"
         suppressHydrationWarning
@@ -71,6 +70,5 @@ export default async function RootLayout({
           </body>
         </SessionProvider>
       </html>
-    </Suspense>
   );
 }

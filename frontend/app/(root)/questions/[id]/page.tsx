@@ -13,6 +13,8 @@ import AnswerForm from "../../ask-question/components/AnswerForm";
 import { getAnswers } from "@/lib/actions/answer.action";
 import AllAnswers from "@/app/components/answers/AllAnswers";
 import Votes from "@/app/components/votes/Votes";
+import { hasVoted } from "@/lib/actions/vote.action";
+import { Suspense } from "react";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -32,6 +34,8 @@ const QuestionDetails = async ({ params }: RouteParams) => {
     page: 1,
     pageSize: 10,
   })
+
+  const hasVotedPromese = hasVoted({ targetId: question.id, targetType: "question" });
 
   const totalAnswers = answersResult?.totalAnswers || 0;
 
@@ -56,12 +60,15 @@ const QuestionDetails = async ({ params }: RouteParams) => {
             </Link>
           </div>
           <div className="flex justify-end">
-            <Votes
-              upvotes={question.upvotes}
-              hasUpvoted={true}
-              downvotes={question.downvotes}
-              hasDownvoted={false}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Votes
+                upvotes={question.upvotes || 0}
+                downvotes={question.downvotes || 0}
+                targetType="question"
+                targetId={question.id}
+                hasVotedPromise={hasVotedPromese}
+              />
+            </Suspense>
           </div>
         </div>
         <h2 className="h2-semibold text-dark200_light900 mt-3.5 w-full">
@@ -106,16 +113,16 @@ const QuestionDetails = async ({ params }: RouteParams) => {
         ))}
       </div>
       <section className="my-5">
-        <AllAnswers 
+        <AllAnswers
           data={answersResult?.answers}
           success={areAnswersLoaded}
           error={answersError}
           totalAnswers={totalAnswers || 0}
-        />  
+        />
       </section>
 
       <section className="my-5">
-        <AnswerForm 
+        <AnswerForm
           questionId={question.id}
           questionTitle={question.title}
           questionContent={question.content}

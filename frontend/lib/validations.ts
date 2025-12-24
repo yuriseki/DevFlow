@@ -70,10 +70,27 @@ export const GetAnswersSchema = PaginatedSearchParamsSchema.extend({
 
 export const AIAnswerSchema = z.object({
   question: z.string().min(5, {
-    message: "Question title must be at least 5 characters.",
+    error: "Question title must be at least 5 characters.",
   }),
   content: z.string().min(10, {
-    message: "Question description must have Minimum of 10 characters.",
+    error: "Question description must have Minimum of 10 characters.",
   }),
   userAnswer: z.string().optional(),
 });
+
+export const CreateVoteSchema = z.object({
+  targetId: z.int().min(1, {
+    error: "Target id is required.",
+  }),
+  targetType: z.enum(["question", "answer"], {
+    error: "Invalid target type.",
+  }),
+  voteType: z.enum(["upvote", "downvote"], {
+    error: "Invalid vote type.",
+  }),
+});
+
+export const hasVotedSchema = CreateVoteSchema.pick({
+  targetId: true,
+  targetType: true,
+})
