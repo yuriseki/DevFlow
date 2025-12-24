@@ -35,7 +35,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
     pageSize: 10,
   })
 
-  const hasVotedPromese = hasVoted({ targetId: question.id, targetType: "question" });
+  const hasVotedPromise = hasVoted({ targetId: question.id, targetType: "question" });
 
   const totalAnswers = answersResult?.totalAnswers || 0;
 
@@ -66,7 +66,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
                 downvotes={question.downvotes || 0}
                 targetType="question"
                 targetId={question.id}
-                hasVotedPromise={hasVotedPromese}
+                hasVotedPromise={hasVotedPromise}
               />
             </Suspense>
           </div>
