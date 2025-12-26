@@ -11,6 +11,11 @@ interface Author {
   image: string;
 }
 
+interface ExtendedUser {
+  id: string;
+  provider_account_id: string;
+}
+
 interface Question {
   id: number;
   title: string;
@@ -72,4 +77,8 @@ type HasVotedParams = Pick<CreateVoteParams, "targetId" | "targetType">;
 interface HasVotedResponse {
   hasUpvoted: boolean;
   hasDownvoted: boolean;
+}
+
+interface CollectionBaseParams {
+  questionId: number;
 }

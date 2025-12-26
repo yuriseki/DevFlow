@@ -46,7 +46,6 @@ class UserCollectionLoad(UserCollectionBase):
 
     This schema is used in the load and list endpoints.
     """
-    id: int
     created_at: datetime
     updated_at: datetime
     user_id: int

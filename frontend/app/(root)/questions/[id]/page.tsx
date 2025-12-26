@@ -15,6 +15,7 @@ import AllAnswers from "@/app/components/answers/AllAnswers";
 import Votes from "@/app/components/votes/Votes";
 import { hasVoted } from "@/lib/actions/vote.action";
 import { Suspense } from "react";
+import SaveQuestion from "@/app/components/answers/questions/SaveQuestion";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -67,6 +68,12 @@ const QuestionDetails = async ({ params }: RouteParams) => {
                 targetType="question"
                 targetId={question.id}
                 hasVotedPromise={hasVotedPromise}
+              />
+            </Suspense>
+
+            <Suspense fallback={<div>Loading...</div>}>
+              <SaveQuestion
+                questionId={parseInt(id)}
               />
             </Suspense>
           </div>

@@ -10,16 +10,12 @@ import { AnswerCreate, AnswerLoad } from "@/types/answer";
 import {
   ActionResponse,
   ErrorResponse,
+  ExtendedUser,
   GetAnswersParams,
 } from "@/types/global";
 import { apiAccount } from "../api/apiAccount";
 import { apiAnswer } from "../api/apiAnswer";
 import handleError from "../handlers/error";
-
-interface ExtendedUser {
-  id: string;
-  provider_account_id: string;
-}
 
 type AnswerInput = {
   content: string;

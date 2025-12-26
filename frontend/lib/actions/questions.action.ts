@@ -7,6 +7,7 @@ import {
   ActionResponse,
   ErrorResponse,
   IncrementViewsParams,
+  ExtendedUser,
 } from "@/types/global";
 import action from "@/lib/handlers/action";
 import {
@@ -16,10 +17,6 @@ import {
 } from "@/app/(root)/ask-question/components/validation";
 import { apiQuestion } from "@/lib/api/apiQuestion";
 
-interface ExtendedUser {
-  id: string;
-  provider_account_id: string;
-}
 import { apiAccount } from "@/lib/api/apiAccount";
 import handleError from "@/lib/handlers/error";
 import {

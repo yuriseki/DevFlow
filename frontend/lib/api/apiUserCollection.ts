@@ -5,23 +5,28 @@ import { ActionResponse } from '@/types/global';
 import { type UserCollectionCreate, UserCollectionLoad, UserCollectionUpdate } from '@/types/user_collection';
 
 export const apiUserCollection = {
-  getUserCollection: (userCollectionId: number): Promise<ActionResponse<UserCollectionLoad>> =>
-    fetchHandler(`/api/v1/user__collection/load/${userCollectionId}`),
+  getUserCollection: (userId: number, questionId: number): Promise<ActionResponse<UserCollectionLoad>> =>
+    fetchHandler(`/api/v1/user_collection/load/${userId}/${questionId}`),
 
-  create: (user__collection: UserCollectionCreate): Promise<ActionResponse<UserCollectionLoad>> =>
-    fetchHandler(`/api/v1/user__collection/create`, {
+  create: (user_collection: UserCollectionCreate): Promise<ActionResponse<UserCollectionLoad>> =>
+    fetchHandler(`/api/v1/user_collection/create`, {
       method: "POST",
-      body: JSON.stringify(user__collection)
+      body: JSON.stringify(user_collection)
     }),
 
-  update: (userCollectionId: number, user__collection_update: UserCollectionUpdate): Promise<ActionResponse<UserCollectionLoad>> =>
-    fetchHandler(`/api/v1/user__collection/update/${userCollectionId}`, {
+  update: (userCollectionId: number, user_collection_update: UserCollectionUpdate): Promise<ActionResponse<UserCollectionLoad>> =>
+    fetchHandler(`/api/v1/user_collection/update/${userCollectionId}`, {
       method: "PUT",
-      body: JSON.stringify(user__collection_update)
+      body: JSON.stringify(user_collection_update)
     }),
 
-  delete: (userCollectionId: number): Promise<ActionResponse<void>> =>
-    fetchHandler(`/api/v1/user__collection/delete/${userCollectionId}`, {
+  delete: (userId: number, questionId: number): Promise<ActionResponse<void>> =>
+    fetchHandler(`/api/v1/user_collection/delete/${userId}/${questionId}`, {
       method: "DELETE"
+    }),
+
+  toggle: (userId: number, questionId: number): Promise<ActionResponse<void>> =>
+    fetchHandler(`/api/v1/user_collection/toggle/${userId}/${questionId}`, {
+      method: "POST"
     }),
 };

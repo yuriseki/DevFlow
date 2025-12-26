@@ -6,7 +6,7 @@ import {
   HasVotedParams,
   HasVotedResponse,
 } from "@/types/global";
-import { CreateVoteSchema, hasVotedSchema } from "../validations";
+import { CreateVoteSchema, HasVotedSchema } from "../validations";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
 import {
@@ -64,7 +64,7 @@ export async function hasVoted(
 ): Promise<ActionResponse<HasVotedResponse>> {
   const validationResult = await action({
     params,
-    schema: hasVotedSchema,
+    schema: HasVotedSchema,
     authorize: true,
   });
 

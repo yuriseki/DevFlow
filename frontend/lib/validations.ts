@@ -90,7 +90,11 @@ export const CreateVoteSchema = z.object({
   }),
 });
 
-export const hasVotedSchema = CreateVoteSchema.pick({
+export const HasVotedSchema = CreateVoteSchema.pick({
   targetId: true,
   targetType: true,
-})
+});
+
+export const CollectionBaseSchema = z.object({
+  questionId: z.int().min(1, { error: "Question iD is required" }),
+});
