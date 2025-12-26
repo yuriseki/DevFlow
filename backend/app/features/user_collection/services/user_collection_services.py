@@ -3,6 +3,7 @@
 from typing import Type
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlmodel import and_, desc, func, or_, select
 
 from app.core.lib.base_model_service import BaseModelService
@@ -96,6 +97,11 @@ class UserCollectionService(
         base_smtm = (
             select(Question)
             .join(UserCollection)
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.answers),
+                selectinload(Question.author),
+            )
             .where(
                 and_(
                     Question.id == UserCollection.question_id,
