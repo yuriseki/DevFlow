@@ -44,3 +44,36 @@ export async function toggleSaveQuestion(
     return handleError(error) as ErrorResponse;
   }
 }
+
+export async function hasSavedQuestion(
+  params: CollectionBaseParams
+): Promise<ActionResponse<{ saved: boolean }>> {
+  const validationResult = await action({
+    params,
+    schema: CollectionBaseSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { questionId } = validationResult.params!;
+  const userId = (validationResult?.session?.user as ExtendedUser)?.id;
+
+  try {
+   
+    const result = await apiUserCollection.getUserCollection(
+      parseInt(userId),
+      questionId
+    );
+    const isInUserCollection = result.success;
+
+    return {
+      success: true,
+      data: {saved: isInUserCollection},
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}

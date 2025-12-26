@@ -2,28 +2,11 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type UserCollectionCreate, UserCollectionLoad, UserCollectionUpdate } from '@/types/user_collection';
+import { type UserCollectionLoad } from '@/types/user_collection';
 
 export const apiUserCollection = {
   getUserCollection: (userId: number, questionId: number): Promise<ActionResponse<UserCollectionLoad>> =>
     fetchHandler(`/api/v1/user_collection/load/${userId}/${questionId}`),
-
-  create: (user_collection: UserCollectionCreate): Promise<ActionResponse<UserCollectionLoad>> =>
-    fetchHandler(`/api/v1/user_collection/create`, {
-      method: "POST",
-      body: JSON.stringify(user_collection)
-    }),
-
-  update: (userCollectionId: number, user_collection_update: UserCollectionUpdate): Promise<ActionResponse<UserCollectionLoad>> =>
-    fetchHandler(`/api/v1/user_collection/update/${userCollectionId}`, {
-      method: "PUT",
-      body: JSON.stringify(user_collection_update)
-    }),
-
-  delete: (userId: number, questionId: number): Promise<ActionResponse<void>> =>
-    fetchHandler(`/api/v1/user_collection/delete/${userId}/${questionId}`, {
-      method: "DELETE"
-    }),
 
   toggle: (userId: number, questionId: number): Promise<ActionResponse<void>> =>
     fetchHandler(`/api/v1/user_collection/toggle/${userId}/${questionId}`, {

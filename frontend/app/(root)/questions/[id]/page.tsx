@@ -16,6 +16,7 @@ import Votes from "@/app/components/votes/Votes";
 import { hasVoted } from "@/lib/actions/vote.action";
 import { Suspense } from "react";
 import SaveQuestion from "@/app/components/answers/questions/SaveQuestion";
+import { hasSavedQuestion } from "@/lib/actions/collection.action";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -43,6 +44,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
   question.views++;
   const { author, created_at, answers, views, tags, content, title } = question;
 
+  const hasSavedQuestionPromise = hasSavedQuestion({ questionId: parseInt(id) });
   return (
     <>
       <div className="flex-start w-full flex-col">
@@ -60,7 +62,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
               </p>
             </Link>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end items-center gap-4">
             <Suspense fallback={<div>Loading...</div>}>
               <Votes
                 upvotes={question.upvotes || 0}
@@ -74,6 +76,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
             <Suspense fallback={<div>Loading...</div>}>
               <SaveQuestion
                 questionId={parseInt(id)}
+                hasSavedQuestionPromise={hasSavedQuestionPromise}
               />
             </Suspense>
           </div>
