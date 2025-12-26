@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type UserCreate, UserLoad, UserUpdate } from '@/types/user';
+import { type GetUsersResponse, UserCreate, UserLoad, UserUpdate } from '@/types/user';
 
 export const apiUser = {
   getAll: (): Promise<ActionResponse<UserLoad[]>> =>
@@ -43,4 +43,15 @@ export const apiUser = {
     fetchHandler(`/api/v1/user/delete/${userId}`, {
       method: "DELETE"
     }),
+
+  getUsers: (page: number, pageSize: number, query: string, filter: string): Promise<ActionResponse<GetUsersResponse>> => {
+    const params = new URLSearchParams();
+    if (page !== undefined && page !== null) params.append('page', page.toString());
+    if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
+    if (query) params.append('query', query);
+    if (filter) params.append('filter', filter);
+    return fetchHandler(`/api/v1/user/users?${params.toString()}`, {
+      method: "POST"
+    });
+  },
 };

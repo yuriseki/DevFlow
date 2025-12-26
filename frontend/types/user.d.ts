@@ -16,6 +16,11 @@ export interface UserBase {
   reputation?: number | null;
 }
 
+export interface GetUsersResponse {
+  users: UserLoad[];
+  total: number;
+}
+
 export interface User extends UserBase {
   id?: number | null;
   created_at: string;

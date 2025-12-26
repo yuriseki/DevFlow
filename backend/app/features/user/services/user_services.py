@@ -1,12 +1,13 @@
 """This module provides the service for the User feature."""
+
 from typing import Type, List
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select, func
+from sqlmodel import desc, or_, select, func
 
 from app.core.lib.base_model_service import BaseModelService
-from ..models.user import User, UserCreate, UserLoad, UserUpdate
+from ..models.user import GetUsersResponse, User, UserCreate, UserLoad, UserUpdate
 
 
 class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
@@ -15,8 +16,13 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
     This class inherits from BaseModelService and provides the business logic for the User feature.
     """
 
-    def __init__(self, model: Type[User], create_schema: Type[UserCreate], load_schema: Type[UserLoad],
-                 update_schema: Type[UserUpdate]):
+    def __init__(
+        self,
+        model: Type[User],
+        create_schema: Type[UserCreate],
+        load_schema: Type[UserLoad],
+        update_schema: Type[UserUpdate],
+    ):
         """Initializes the UserService.
 
         Args:
@@ -65,7 +71,9 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
         stmt = select(User)
         result = await session.execute(stmt)
         users = result.scalars().all()
-        user_load_list: List[UserLoad] = [UserLoad.model_validate(user) for user in users]
+        user_load_list: List[UserLoad] = [
+            UserLoad.model_validate(user) for user in users
+        ]
 
         return user_load_list
 
@@ -76,7 +84,9 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
         user = result.scalar_one_or_none()
 
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         user_load = UserLoad.model_validate(user)
 
@@ -90,8 +100,60 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
         user = result.scalar_one_or_none()
 
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         user_load = UserLoad.model_validate(user)
 
         return user_load
+
+    async def get_users(
+        self,
+        session: AsyncSession,
+        page: int = 1,
+        page_size: int = 10,
+        query: str = "",
+        filter: str = "",
+    ) -> GetUsersResponse:
+        # Default to newest.
+        order = desc(User.created_at)
+        if filter == "newest":
+            order = desc(User.created_at)
+        if filter == "olders":
+            order = User.created_at
+        if filter == "popular":
+            order = desc(User.reputation)
+
+        smtm = (
+            select(User)
+            .where(
+                or_(
+                    func.lower(User.name).like(f"%{query.lower()}%"),
+                    func.lower(User.email).like(f"%{query.lower()}%"),
+                ),
+            )
+            .order_by(order)
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+
+        count_smtm = (
+            select(func.count())
+            .select_from(User)
+            .where(
+                or_(
+                    func.lower(User.name).like(f"%{query.lower()}%"),
+                    func.lower(User.email).like(f"%{query.lower()}%"),
+                ),
+            )
+        )
+        total_result = await session.execute(count_smtm)
+        total = total_result.scalar() or 0
+        result = await session.execute(smtm)
+        users = result.scalars().all()
+
+        users_load = [UserLoad.model_validate(user) for user in users]
+
+        return GetUsersResponse(users=users_load, total=total)
+

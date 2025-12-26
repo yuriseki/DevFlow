@@ -6,8 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import get_session
-from app.features.user.models.user import User, UserCreate, UserLoad, \
-    UserUpdate
+from app.features.user.models.user import (
+    GetUsersResponse,
+    User,
+    UserCreate,
+    UserLoad,
+    UserUpdate,
+)
 from .services.user_services import UserService
 
 router = APIRouter(
@@ -26,14 +31,20 @@ async def get_all(session: AsyncSession = Depends(get_session)):
 
 
 @router.post("/email", response_model=UserLoad)
-async def load_by_email(email: str = Body(..., embed=True), session: AsyncSession = Depends(get_session)):
+async def load_by_email(
+    email: str = Body(..., embed=True), session: AsyncSession = Depends(get_session)
+):
     user = await user_service.load_by_email(session, email)
     return user
 
+
 @router.post("/username", response_model=UserLoad)
-async def load_by_username(username: str = Body(..., embed=True), session: AsyncSession = Depends(get_session)):
+async def load_by_username(
+    username: str = Body(..., embed=True), session: AsyncSession = Depends(get_session)
+):
     user = await user_service.load_by_username(session, username)
     return user
+
 
 @router.get("/load/{user_id}", response_model=UserLoad)
 async def get_user(user_id: int, session: AsyncSession = Depends(get_session)):
@@ -51,7 +62,9 @@ async def get_user(user_id: int, session: AsyncSession = Depends(get_session)):
     """
     user = await user_service.load(session, user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     return user
 
 
@@ -69,8 +82,10 @@ async def create(user: UserCreate, session: AsyncSession = Depends(get_session))
     return await user_service.create(session, user)
 
 
-@router.put('/update/{user_id}', response_model=UserLoad)
-async def update(user_id: int, user_update: UserUpdate, session: AsyncSession = Depends(get_session)):
+@router.put("/update/{user_id}", response_model=UserLoad)
+async def update(
+    user_id: int, user_update: UserUpdate, session: AsyncSession = Depends(get_session)
+):
     """Updates a User.
 
     Args:
@@ -86,7 +101,9 @@ async def update(user_id: int, user_update: UserUpdate, session: AsyncSession = 
     """
     db_obj = await user_service.load(session, user_id)
     if not db_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     return await user_service.update(session, user_update)
 
 
@@ -103,6 +120,23 @@ async def delete(user_id: int, session: AsyncSession = Depends(get_session)):
     """
     db_obj = await user_service.load(session, user_id)
     if not db_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     await user_service.delete(session, db_obj)
     return {"message": "User deleted successfully"}
+
+
+@router.post("/users", response_model=GetUsersResponse)
+async def get_users(
+    page: int = 1,
+    page_size: int = 10,
+    query: str = "",
+    filter: str = "",
+    session: AsyncSession = Depends(get_session),
+):
+    """Get multiple users"""
+    response: GetUsersResponse = await user_service.get_users(
+        session, page, page_size, query, filter
+    )
+    return response

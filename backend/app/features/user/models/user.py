@@ -64,3 +64,7 @@ class UserLoad(UserBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime]
+
+class GetUsersResponse(SQLModel):
+    users: List[UserLoad]
+    total: int
