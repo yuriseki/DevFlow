@@ -96,5 +96,6 @@ export const HasVotedSchema = CreateVoteSchema.pick({
 });
 
 export const CollectionBaseSchema = z.object({
-  questionId: z.int().min(1, { error: "Question iD is required" }),
+  questionId: z.int().min(1, { error: "Question ID is required" }),
 });
+

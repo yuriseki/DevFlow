@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type UserCollectionLoad } from '@/types/user_collection';
+import { type UserCollectionLoad, UserCollectionPaginatedResponse } from '@/types/user_collection';
 
 export const apiUserCollection = {
   getUserCollection: (userId: number, questionId: number): Promise<ActionResponse<UserCollectionLoad>> =>
@@ -12,4 +12,16 @@ export const apiUserCollection = {
     fetchHandler(`/api/v1/user_collection/toggle/${userId}/${questionId}`, {
       method: "POST"
     }),
+
+  getUserSavedQuestions: (userId: number, page: number, pageSize: number, query: string, filter: string): Promise<ActionResponse<UserCollectionPaginatedResponse>> => {
+    const params = new URLSearchParams();
+    if (userId !== undefined && userId !== null) params.append('user_id', userId.toString());
+    if (page !== undefined && page !== null) params.append('page', page.toString());
+    if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
+    if (query) params.append('query', query);
+    if (filter) params.append('filter', filter);
+    return fetchHandler(`/api/v1/user_collection/user-collection?${params.toString()}`, {
+      method: "POST"
+    });
+  },
 };

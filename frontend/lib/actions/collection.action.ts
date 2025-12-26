@@ -5,14 +5,20 @@ import {
   CollectionBaseParams,
   ErrorResponse,
   ExtendedUser,
+  PaginatedSearchParams,
 } from "@/types/global";
-import { CollectionBaseSchema } from "../validations";
+import {
+  CollectionBaseSchema,
+  PaginatedSearchParamsSchema,
+} from "../validations";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
 import { getQuestion } from "./questions.action";
 import { apiUserCollection } from "../api/apiUserCollection";
 import { revalidatePath } from "next/cache";
 import ROUTES from "@/constants/routes";
+import { QuestionLoad } from "@/types/question";
+
 
 export async function toggleSaveQuestion(
   params: CollectionBaseParams
@@ -62,7 +68,6 @@ export async function hasSavedQuestion(
   const userId = (validationResult?.session?.user as ExtendedUser)?.id;
 
   try {
-   
     const result = await apiUserCollection.getUserCollection(
       parseInt(userId),
       questionId
@@ -71,9 +76,49 @@ export async function hasSavedQuestion(
 
     return {
       success: true,
-      data: {saved: isInUserCollection},
+      data: { saved: isInUserCollection },
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getSavedQuestions(
+  params: PaginatedSearchParams
+): Promise<ActionResponse<{
+  questions: QuestionLoad[],
+  isNext: boolean,
+  totalQuestions: number,
+}>> {
+  const validationResult = await action({
+    params,
+    schema: PaginatedSearchParamsSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+  const userId = (validationResult?.session?.user as ExtendedUser)?.id;
+  const { page = 1, pageSize = 10, query = "", filter = "" } = params;
+
+  const result = await apiUserCollection.getUserSavedQuestions(
+    parseInt(userId),
+    page,
+    pageSize,
+    query,
+    filter
+  );
+
+  if (!result.success) {
+    return handleError(result.error) as ErrorResponse;
+  }
+
+  const totalQuestions = result.data?.total || 0;
+  const hasNext = totalQuestions > ((page -1) * pageSize) + result.data!.questions.length;
+  
+  return {
+    success: true,
+    data: {questions: result.data!.questions, isNext: hasNext, totalQuestions: totalQuestions}
   }
 }

@@ -6,6 +6,7 @@ from app.features.user_collection.models.user_collection import (
     UserCollection,
     UserCollectionCreate,
     UserCollectionLoad,
+    UserCollectionPaginatedResponse,
     UserCollectionUpdate,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -39,3 +40,25 @@ async def toggle(
 ):
     await user_collection_service.toggle(session, user_id, question_id)
     return {"message": "User Collectoin has been toggled."}
+
+
+@router.post("/user-collection", response_model=UserCollectionPaginatedResponse)
+async def get_user_saved_questions(
+    user_id: int,
+    page: int = 1,
+    page_size: int = 10,
+    query: str = "",
+    filter: str = "",
+    session: AsyncSession = Depends(get_session),
+):
+    result: UserCollectionPaginatedResponse = (
+        await user_collection_service.get_user_saved_questions(
+            session,
+            user_id,
+            page,
+            page_size,
+            query,
+            filter,
+        )
+    )
+    return result
