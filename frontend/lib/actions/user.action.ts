@@ -13,7 +13,7 @@ import { apiUser } from "../api/apiUser";
 
 export async function getUsers(
   params: PaginatedSearchParams
-): Promise<ActionResponse<{ users: UserLoad[]; hasNext: boolean; totalUsers: number }>> {
+): Promise<ActionResponse<{ users: UserLoad[]; isNext: boolean; totalUsers: number }>> {
   const validationResult = await action({
     params,
     schema: PaginatedSearchParamsSchema,
@@ -38,6 +38,6 @@ export async function getUsers(
 
   return {
     success: true,
-    data: {users: result.data!.users, hasNext, totalUsers}
+    data: {users: result.data!.users, isNext: hasNext, totalUsers}
   }
 }
