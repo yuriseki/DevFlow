@@ -1,5 +1,6 @@
 import QuestionCard from "@/app/components/cards/QuestionCard";
 import CommonFilter from "@/app/components/filters/CommonFilter";
+import Pagination from "@/app/components/Pagination";
 import LocalSearch from "@/app/components/search/LocalSearch";
 import DataRenderer from "@/components/DataRenderer";
 import { HomePageFilters, TagFilters } from "@/constants/filters";
@@ -21,6 +22,7 @@ const Tags = async ({ params, searchParams }: RouteParams) => {
   });
 
   const { questions } = data || {};
+  const isNext = data?.isNext || false;
   const tag = data?.questions?.[0]?.tags?.find((t) => t.id === Number(id));
 
   return (
@@ -57,6 +59,10 @@ const Tags = async ({ params, searchParams }: RouteParams) => {
             ))}
           </div>
         )}
+      />
+      <Pagination
+        page={page}
+        isNext={isNext || false}
       />
     </>
   );

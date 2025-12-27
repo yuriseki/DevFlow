@@ -1,5 +1,6 @@
 import QuestionCard from "@/app/components/cards/QuestionCard";
 import CommonFilter from "@/app/components/filters/CommonFilter";
+import Pagination from "@/app/components/Pagination";
 import LocalSearch from "@/app/components/search/LocalSearch";
 import DataRenderer from "@/components/DataRenderer";
 import { CollectionFilters } from "@/constants/filters";
@@ -27,6 +28,7 @@ const Collection = async ({
 
   const data = result.data;
   const questions = data?.questions || [];
+  const isNext = data?.isNext || false;
 
   return (
     <>
@@ -41,7 +43,7 @@ const Collection = async ({
           otherClasses="flex-1"
           iconPosition="left"
         />
-        <CommonFilter 
+        <CommonFilter
           filters={CollectionFilters}
           otherClasses="min-h-[56px] sm:min-w-[170px]"
         />
@@ -61,6 +63,10 @@ const Collection = async ({
             ))}
           </div>
         )}
+      />
+      <Pagination
+        page={page}
+        isNext={isNext || false}
       />
     </>
   );
