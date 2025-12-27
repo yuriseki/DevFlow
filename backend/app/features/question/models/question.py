@@ -34,13 +34,9 @@ class Question(QuestionBase, table=True):
 
     id: int | None = Field(primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime | None = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
     answers: List["Answer"] | None = Relationship(back_populates="question")
-    tags: List["Tag"] = Relationship(
-        back_populates="questions", link_model=QuestionTagRelationship
-    )
+    tags: List["Tag"] = Relationship(back_populates="questions", link_model=QuestionTagRelationship)
     author: Optional["User"] = Relationship(back_populates="questions")
 
 
@@ -82,4 +78,4 @@ class QuestionLoad(QuestionBase):
     tags: List[TagLoad] | None
     author: Optional[UserLoad]
     answers: List[AnswerLoad] | None
-    views: int = 0
+    views: int | None = 0

@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import not_
-from sqlmodel import select, func, or_
+from sqlmodel import desc, select, func, or_
 
 from app.core.lib.base_model_service import BaseModelService
 from ..models.question import Question, QuestionCreate, QuestionLoad, QuestionUpdate
@@ -204,10 +204,15 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         query: str = "",
         filter: str = "",
     ) -> List[QuestionLoad]:
+        order = desc(Question.created_at)
         if filter == "popular":
-            order = Question.upvotes.desc()  # type: ignore
-        else:
-            order = Question.created_at.desc()  # type: ignore
+            order = desc(Question.views)
+        if filter == "newest":
+            order = desc(Question.created_at)
+        if filter == "unanswered":
+            order = Question.created_at
+        if filter == "recommended":
+            order = desc(Question.upvotes)
 
         smtm = (
             select(Question)

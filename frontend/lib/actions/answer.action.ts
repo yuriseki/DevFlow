@@ -76,12 +76,13 @@ export async function getAnswers(params: GetAnswersParams): Promise<
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { question_id, page = 1, pageSize = 10 } = params;
+  const { question_id, page = 1, pageSize = 10, filter = "" } = params;
 
   const result = await apiAnswer.getAnswersForQuestion(
     question_id,
     page,
-    pageSize
+    pageSize,
+    filter,
   );
 
   if (!result.success) {

@@ -110,8 +110,19 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         page: int = 1,
         page_size: int = 10,
         query: str = "",
+        filter: str = "",
     ) -> List[QuestionLoad]:
         """Return a list of tags bases on query"""
+        order = desc(Question.created_at)
+        if filter == "popular":
+            order = desc(Question.views)
+        if filter == "newest":
+            order = desc(Question.created_at)
+        if filter == "unanswered":
+            order = Question.created_at
+        if filter == "recommended":
+            order = desc(Question.upvotes)
+
 
         smtm = (
             select(Question)
@@ -133,7 +144,7 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
             )
             .offset((page - 1) * page_size)
             .limit(page_size)
-            .order_by(desc(col(Question.upvotes)))
+            .order_by(order)
         )
 
         result = await session.execute(smtm)

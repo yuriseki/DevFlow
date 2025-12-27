@@ -39,7 +39,7 @@ export interface QuestionLoad extends QuestionBase {
   tags?: TagLoad[] | null;
   author?: UserLoad | null;
   answers?: AnswerLoad[] | null;
-  views: number;
+  views?: number | null;
 }
 
 export interface QuestionUpdate {

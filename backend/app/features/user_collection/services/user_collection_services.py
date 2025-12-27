@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import and_, desc, func, or_, select
 
 from app.core.lib.base_model_service import BaseModelService
+from app.features.answer.models.answer import Answer
 from app.features.question.models.question import Question, QuestionLoad
 
 from ..models.user_collection import (
@@ -85,6 +86,8 @@ class UserCollectionService(
         filter: str = "",
     ) -> UserCollectionPaginatedResponse:
         order = desc(Question.upvotes)
+        if filter == "oldest":
+            order = UserCollection.created_at
         if filter == "mostrecent":
             order = desc(UserCollection.created_at)
         if filter == "mostvoted":
@@ -92,7 +95,13 @@ class UserCollectionService(
         if filter == "mostviewed":
             order = desc(Question.upvotes)
         if filter == "mostanswered":
-            order = desc(Question.answers)
+            answer_count = (
+                select(func.count(Answer.id))
+                .where(Answer.question_id == Question.id)
+                .correlate(Question)
+                .scalar_subquery()
+            )
+            order = desc(answer_count)
 
         base_smtm = (
             select(Question)

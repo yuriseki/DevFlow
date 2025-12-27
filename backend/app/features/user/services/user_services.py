@@ -120,7 +120,7 @@ class UserService(BaseModelService[User, UserCreate, UserLoad, UserUpdate]):
         order = desc(User.created_at)
         if filter == "newest":
             order = desc(User.created_at)
-        if filter == "olders":
+        if filter == "oldest":
             order = User.created_at
         if filter == "popular":
             order = desc(User.reputation)

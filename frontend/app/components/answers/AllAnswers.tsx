@@ -3,6 +3,8 @@ import { EMPTY_ANSWERS } from "@/constants/states";
 import { AnswerLoad } from "@/types/answer";
 import { ActionResponse } from "@/types/global";
 import AnswerCard from "../cards/AnswerCard";
+import CommonFilter from "../filters/CommonFilter";
+import { AnswerFilters } from "@/constants/filters";
 
 interface Props extends ActionResponse<AnswerLoad[]> {
   totalAnswers: number;
@@ -17,21 +19,25 @@ const AllAnswers = ({ data, success, error, totalAnswers }: Props) => {
             ? "Be the first one to answer"
             : `${totalAnswers} Answer${totalAnswers === 1 ? "" : "s"}`}
         </h3>
-        <p>Filters</p>
+        <CommonFilter
+          filters={AnswerFilters}
+          otherClasses="min-w-[32px]"
+          containerClasses="max-xs:w-full"
+        />
       </div>
 
-       <DataRenderer
-         data={data}
-         error={error}
-         success={success}
-         empty={EMPTY_ANSWERS}
-         render={(answers) => answers.map((answer) => 
+      <DataRenderer
+        data={data}
+        error={error}
+        success={success}
+        empty={EMPTY_ANSWERS}
+        render={(answers) => answers.map((answer) =>
           <AnswerCard
             key={answer.id}
             {...answer}
           />
         )}
-       />
+      />
 
     </div>
   );

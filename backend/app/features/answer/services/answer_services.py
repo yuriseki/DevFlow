@@ -56,6 +56,7 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
         question_id,
         page: int = 1,
         page_size: int = 10,
+        filter: str = "",
     ) -> AnswersForQuestionResponse:
         """
         Retrieves answers for a specific question with pagination and total count.
@@ -69,13 +70,21 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
         Returns:
             AnswersForQuestionResponse: Object containing the list of answers and total count.
         """
+        order = desc(Answer.upvotes)
+        if filter == "popular":
+            order = desc(Answer.upvotes)
+        if filter == "oldest":
+            order = Answer.created_at
+        if filter == "latest":
+            order = desc(Answer.created_at)
+
         smtm = (
             select(Answer)
             .options(selectinload(Answer.user))
             .where(Answer.question_id == question_id)
             .offset((page - 1) * page_size)
             .limit(page_size)
-            .order_by(desc(Answer.created_at))
+            .order_by(order)
         )
 
         result = await session.execute(smtm)

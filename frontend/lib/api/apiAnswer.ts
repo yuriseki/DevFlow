@@ -25,10 +25,11 @@ export const apiAnswer = {
       method: "DELETE"
     }),
 
-  getAnswersForQuestion: (questionId: number, page: number, pageSize: number): Promise<ActionResponse<AnswersForQuestionResponse>> => {
+  getAnswersForQuestion: (questionId: number, page: number, pageSize: number, filter: string): Promise<ActionResponse<AnswersForQuestionResponse>> => {
     const params = new URLSearchParams();
     if (page !== undefined && page !== null) params.append('page', page.toString());
     if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
+    if (filter) params.append('filter', filter);
     return fetchHandler(`/api/v1/answer/answers-for-question/${questionId}?${params.toString()}`);
   },
 };

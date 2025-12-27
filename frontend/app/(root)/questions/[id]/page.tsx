@@ -18,9 +18,9 @@ import { Suspense } from "react";
 import SaveQuestion from "@/app/components/answers/questions/SaveQuestion";
 import { hasSavedQuestion } from "@/lib/actions/collection.action";
 
-const QuestionDetails = async ({ params }: RouteParams) => {
+const QuestionDetails = async ({ params, searchParams }: RouteParams) => {
   const { id } = await params;
-
+  const {page, pageSize, filter} = await searchParams;
   const { success, data: question } = await getQuestion({
     id: parseInt(id),
   });
@@ -33,8 +33,9 @@ const QuestionDetails = async ({ params }: RouteParams) => {
 
   const { success: areAnswersLoaded, data: answersResult, error: answersError } = await getAnswers({
     question_id: parseInt(id),
-    page: 1,
-    pageSize: 10,
+    page: Number(page) || 1,
+    pageSize: Number(pageSize) || 10,
+    filter: filter,
   })
 
   const hasVotedPromise = hasVoted({ targetId: question.id, targetType: "question" });

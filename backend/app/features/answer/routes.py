@@ -101,6 +101,7 @@ async def get_answers_for_question(
     question_id: int,
     page: int = 1,
     page_size: int = 10,
+    filter: str = "",
     session: AsyncSession = Depends(get_session),
 ):
     """Gets all answers for a given question with total count.
@@ -111,4 +112,4 @@ async def get_answers_for_question(
         page_size: Number of answers per page.
         session: The database session.
     """
-    return await answer_service.get_answers_for_question(session, question_id, page, page_size)
+    return await answer_service.get_answers_for_question(session, question_id, page, page_size, filter)

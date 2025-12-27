@@ -6,10 +6,10 @@ import ROUTES from "@/constants/routes";
 import Metric from "@/app/components/cards/Metric";
 import SaveQuestion from "../answers/questions/SaveQuestion";
 import { hasSavedQuestion } from "@/lib/actions/collection.action";
-import { Question } from "@/types/question";
+import { QuestionLoad } from "@/types/question";
 
 interface Props {
-  question: Question;
+  question: QuestionLoad;
 }
 
 const QuestionCard = ({

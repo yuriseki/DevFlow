@@ -9,9 +9,7 @@ import { GetTagQuestionSchema, PaginatedSearchParamsSchema } from "../validation
 import handleError from "../handlers/error";
 import action from "@/lib/handlers/action";
 import { apiTag } from "@/lib/api/apiTag";
-import { GetQuestionSchema } from "@/app/(root)/ask-question/components/validation";
 import { QuestionLoad } from "@/types/question";
-import { int } from "zod";
 
 export const getTags = async (
   params: PaginatedSearchParams
@@ -53,9 +51,9 @@ export const getTagQuestions = async (
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { tagId, page = 1, pageSize = 10, query = "" } = params;
+  const { tagId, page = 1, pageSize = 10, query = "", filter = "" } = params;
 
-  const result = await apiTag.getTagQuestions(parseInt(tagId), page, pageSize, query, "");
+  const result = await apiTag.getTagQuestions(tagId, page, pageSize, query, filter);
 
   if (!result.success) {
     return handleError(result.error) as ErrorResponse;
