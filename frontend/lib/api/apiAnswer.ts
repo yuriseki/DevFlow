@@ -32,4 +32,7 @@ export const apiAnswer = {
     if (filter) params.append('filter', filter);
     return fetchHandler(`/api/v1/answer/answers-for-question/${questionId}?${params.toString()}`);
   },
+
+  getTotalAnswersByUser: (userId: number): Promise<ActionResponse<number>> =>
+    fetchHandler(`/api/v1/answer/total-answers-by-user/${userId}`),
 };

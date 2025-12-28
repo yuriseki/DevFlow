@@ -96,3 +96,12 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
         total = total_result.scalar() or 0
 
         return AnswersForQuestionResponse(answers=answers_list, total=total)
+
+    async def get_total_answers_by_user(self, session: AsyncSession, user_id: int) -> int:
+        smtm = (
+            select(func.count(Answer.id))
+            .where(Answer.user_id == user_id)
+        )
+
+        result = await session.scalar(smtm)
+        return result

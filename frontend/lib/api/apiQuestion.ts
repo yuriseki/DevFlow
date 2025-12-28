@@ -36,4 +36,7 @@ export const apiQuestion = {
 
   getHotQuestions: (): Promise<ActionResponse<QuestionLoad[]>> =>
     fetchHandler(`/api/v1/question/hot-questions`),
+
+  getTotalQuestionByUser: (userId: number): Promise<ActionResponse<number>> =>
+    fetchHandler(`/api/v1/question/total-questions-by-user/${userId}`),
 };

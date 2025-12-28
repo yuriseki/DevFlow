@@ -287,3 +287,12 @@ class QuestionService(
         result = await session.execute(smtm)
         questions = result.scalars().all()
         return [QuestionLoad.model_validate(q) for q in questions]
+
+    async def get_total_question_by_user(self, session: AsyncSession, user_id: int) -> int:
+        smtm = (
+            select(func.count(Question.id))
+            .where(Question.user_id == user_id)
+        )
+
+        result = await session.scalar(smtm)
+        return result

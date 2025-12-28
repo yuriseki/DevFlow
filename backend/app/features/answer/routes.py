@@ -113,3 +113,10 @@ async def get_answers_for_question(
         session: The database session.
     """
     return await answer_service.get_answers_for_question(session, question_id, page, page_size, filter)
+
+@router.get("/total-answers-by-user/{user_id}", response_model=int)
+async def get_total_answers_by_user(
+    user_id: int, session: AsyncSession = Depends(get_session)
+):
+    total = answer_service.get_total_answers_by_user(session, user_id)
+    return total

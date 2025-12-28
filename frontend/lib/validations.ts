@@ -99,3 +99,6 @@ export const CollectionBaseSchema = z.object({
   questionId: z.int().min(1, { error: "Question ID is required" }),
 });
 
+export const GetUserSchema = z.object({
+  userId: z.int().min(1, {error: "User ID is required"}),
+})

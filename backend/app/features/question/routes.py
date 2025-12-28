@@ -120,7 +120,16 @@ async def get_questions(
     )
     return questions
 
+
 @router.get("/hot-questions", response_model=List[QuestionLoad])
 async def get_hot_questions(session: AsyncSession = Depends(get_session)):
     questions_load = await question_service.get_hot_questions(session)
     return questions_load
+
+
+@router.get("/total-questions-by-user/{user_id}", response_model=int)
+async def get_total_question_by_user(
+    user_id: int, session: AsyncSession = Depends(get_session)
+):
+    total = question_service.get_total_question_by_user(session, user_id)
+    return total
