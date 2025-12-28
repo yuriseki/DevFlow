@@ -153,3 +153,15 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         questions_load = [QuestionLoad.model_validate(question) for question in questions]
 
         return questions_load
+
+    async def get_top_tags(self, session: AsyncSession) -> List[TagLoad]:
+        smtm = (
+            select(Tag)
+            .options(selectinload(Tag.questions))
+            .limit(5)
+            .order_by(desc(Tag.num_questions))
+        )
+        result = await session.execute(smtm)
+        tags = result.scalars().all()
+        return [TagLoad.model_validate(t) for t in tags]
+

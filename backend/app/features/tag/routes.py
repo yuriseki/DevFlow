@@ -123,3 +123,8 @@ async def get_tag_questions(
          session, tag_id, page, page_size, query, filter
     )
     return questions
+
+@router.get("/top-tags", response_model=List[TagLoad])
+async def get_top_tags(session: AsyncSession = Depends(get_session)):
+    tags_load = await tag_service.get_top_tags(session)
+    return tags_load

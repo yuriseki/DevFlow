@@ -6,7 +6,7 @@ import { cn, getDevIconClassName, getTechDescription } from "@/lib/utils";
 import Image from "next/image";
 
 interface Props {
-  id: string;
+  id: string | number;
   name: string;
   questions?: number;
   showCount?: boolean;

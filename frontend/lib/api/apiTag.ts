@@ -42,4 +42,7 @@ export const apiTag = {
     if (filter) params.append('filter', filter);
     return fetchHandler(`/api/v1/tag/${tagId}/questions?${params.toString()}`);
   },
+
+  getTopTags: (): Promise<ActionResponse<TagLoad[]>> =>
+    fetchHandler(`/api/v1/tag/top-tags`),
 };

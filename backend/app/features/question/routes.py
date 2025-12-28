@@ -1,6 +1,7 @@
 """This module provides the routes for the Question feature."""
 
 from app.core import get_session
+from app.features.question.models import question
 from app.features.question.models.question import (
     Question,
     QuestionCreate,
@@ -118,3 +119,8 @@ async def get_questions(
         session, page, page_size, query, filter
     )
     return questions
+
+@router.get("/hot-questions", response_model=List[QuestionLoad])
+async def get_hot_questions(session: AsyncSession = Depends(get_session)):
+    questions_load = await question_service.get_hot_questions(session)
+    return questions_load

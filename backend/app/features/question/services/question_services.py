@@ -14,7 +14,9 @@ from ..models.question_tag_relationship import QuestionTagRelationship
 from ...tag.models.tag import Tag
 
 
-class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, QuestionUpdate]):
+class QuestionService(
+    BaseModelService[Question, QuestionCreate, QuestionLoad, QuestionUpdate]
+):
     """The service for the Question feature.
 
     This class inherits from BaseModelService and provides the business logic for the Question feature.
@@ -43,7 +45,11 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         result = await session.execute(
             select(Question)
             .where(Question.id == id)
-            .options(selectinload(Question.tags), selectinload(Question.author), selectinload(Question.answers)),
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.author),
+                selectinload(Question.answers),
+            ),
         )
         question = result.scalar_one_or_none()
         if not question:
@@ -52,7 +58,9 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         question.views = question.views or 0
         return QuestionLoad.model_validate(question)
 
-    async def create(self, session: AsyncSession, question_in: QuestionCreate, commit: bool = True) -> QuestionLoad:
+    async def create(
+        self, session: AsyncSession, question_in: QuestionCreate, commit: bool = True
+    ) -> QuestionLoad:
         """Creates a new question, handling the relationship with tags."""
         question_data = question_in.model_dump(exclude={"tags"})
         tag_names = getattr(question_in, "tags", [])
@@ -90,7 +98,11 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         result = await session.execute(
             select(Question)
             .where(Question.id == question_id)
-            .options(selectinload(Question.tags), selectinload(Question.author), selectinload(Question.answers))
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.author),
+                selectinload(Question.answers),
+            )
         )
         db_question = result.scalar_one()
         # Ensure views is 0 if null from database
@@ -99,7 +111,9 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
 
         return question_load
 
-    async def update(self, session: AsyncSession, question_in: QuestionUpdate, commit: bool = True) -> QuestionLoad:
+    async def update(
+        self, session: AsyncSession, question_in: QuestionUpdate, commit: bool = True
+    ) -> QuestionLoad:
         """Updates the question, handling the relationship with tags."""
         question_data = question_in.model_dump(exclude={"tags"})
         tags_value = getattr(question_in, "tags", None)
@@ -108,13 +122,19 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         stmt = (
             select(Question)
             .where(Question.id == question_data["id"])
-            .options(selectinload(Question.tags), selectinload(Question.author), selectinload(Question.answers))
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.author),
+                selectinload(Question.answers),
+            )
         )
         result = await session.execute(stmt)
         db_question = result.scalar_one_or_none()
 
         if not db_question:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Question not found"
+            )
 
         # Update scalar fields
         for field, value in question_data.items():
@@ -136,7 +156,11 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
                 unique_new_tag_names = set(new_tag_names)
 
                 # Fetch existing tags from DB
-                stmt_tags = select(Tag).where(Tag.name.in_(unique_new_tag_names)).options(selectinload(Tag.questions))
+                stmt_tags = (
+                    select(Tag)
+                    .where(Tag.name.in_(unique_new_tag_names))
+                    .options(selectinload(Tag.questions))
+                )
                 result_tags = await session.execute(stmt_tags)
                 existing_tags = result_tags.scalars().all()
                 existing_tag_map = {tag.name: tag for tag in existing_tags}
@@ -160,7 +184,9 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             # We need to update counts for both original and new tags
             all_affected_tag_names = list(set(original_tag_names + new_tag_names))
             if all_affected_tag_names:
-                await self.update_num_questions_in_tags(session, all_affected_tag_names, commit=commit)
+                await self.update_num_questions_in_tags(
+                    session, all_affected_tag_names, commit=commit
+                )
         else:
             session.add(db_question)
             if commit:
@@ -172,7 +198,9 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
         db_question.views = db_question.views or 0
         return QuestionLoad.model_validate(db_question)
 
-    async def update_num_questions_in_tags(self, session: AsyncSession, tag_names: List[str], commit: bool = True):
+    async def update_num_questions_in_tags(
+        self, session: AsyncSession, tag_names: List[str], commit: bool = True
+    ):
         """
         Updates the num_questions count for a list of tags by recalculating from the database.
         """
@@ -243,3 +271,19 @@ class QuestionService(BaseModelService[Question, QuestionCreate, QuestionLoad, Q
             question.views = question.views or 0
 
         return [QuestionLoad.model_validate(question) for question in questions]
+
+    async def get_hot_questions(self, session: AsyncSession) -> List[QuestionLoad]:
+        smtm = (
+            select(Question)
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.answers),
+                selectinload(Question.author),
+            )
+            .limit(5)
+            .order_by(desc(Question.views), desc(Question.upvotes))
+        )
+
+        result = await session.execute(smtm)
+        questions = result.scalars().all()
+        return [QuestionLoad.model_validate(q) for q in questions]

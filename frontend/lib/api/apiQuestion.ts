@@ -33,4 +33,7 @@ export const apiQuestion = {
     if (filter) params.append('filter', filter);
     return fetchHandler(`/api/v1/question/questions?${params.toString()}`);
   },
+
+  getHotQuestions: (): Promise<ActionResponse<QuestionLoad[]>> =>
+    fetchHandler(`/api/v1/question/hot-questions`),
 };

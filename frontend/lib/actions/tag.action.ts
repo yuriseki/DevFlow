@@ -5,7 +5,10 @@ import {
   PaginatedSearchParams,
 } from "@/types/global";
 import { TagLoad } from "@/types/tag";
-import { GetTagQuestionSchema, PaginatedSearchParamsSchema } from "../validations";
+import {
+  GetTagQuestionSchema,
+  PaginatedSearchParamsSchema,
+} from "../validations";
 import handleError from "../handlers/error";
 import action from "@/lib/handlers/action";
 import { apiTag } from "@/lib/api/apiTag";
@@ -53,7 +56,13 @@ export const getTagQuestions = async (
 
   const { tagId, page = 1, pageSize = 10, query = "", filter = "" } = params;
 
-  const result = await apiTag.getTagQuestions(tagId, page, pageSize, query, filter);
+  const result = await apiTag.getTagQuestions(
+    tagId,
+    page,
+    pageSize,
+    query,
+    filter
+  );
 
   if (!result.success) {
     return handleError(result.error) as ErrorResponse;
@@ -64,5 +73,24 @@ export const getTagQuestions = async (
   return {
     success: true,
     data: { questions: result.data!, isNext: hasNext },
-  }
+  };
 };
+
+export async function getTopTags(): Promise<ActionResponse<TagLoad[]>> {
+  try {
+    const response = await apiTag.getTopTags();
+
+    if (!response.success || !response.data) {
+      throw new Error("Tags not found");
+    }
+
+    const tags = response.data;
+
+    return {
+      success: true,
+      data: tags,
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}

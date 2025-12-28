@@ -175,3 +175,24 @@ export async function incrementViews(
     return handleError(error) as ErrorResponse;
   }
 }
+
+export async function getHotQuestions(): Promise<
+  ActionResponse<QuestionLoad[]>
+> {
+  try {
+    const response = await apiQuestion.getHotQuestions();
+
+    if (!response.success || !response.data) {
+      throw new Error("Questions not found");
+    }
+
+    const questions = response.data;
+
+    return {
+      success: true,
+      data: questions,
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
