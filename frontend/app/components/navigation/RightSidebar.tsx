@@ -8,8 +8,14 @@ import DataRenderer from "@/components/DataRenderer";
 import { getTopTags } from "@/lib/actions/tag.action";
 
 const RightSidebar = async () => {
-  const { success, data: hotQuestions, error } = await getHotQuestions();
-  const { success: successTags, data: popularTags, error: errorTags } = await getTopTags();
+  // const { success, data: hotQuestions, error } = await getHotQuestions();
+  // const { success: successTags, data: popularTags, error: errorTags } = await getTopTags();
+  
+  // Here we can call both requests in parallel to optimize the user experience.
+  const [
+    { success, data: hotQuestions, error },
+    { success: successTags, data: popularTags, error: errorTags },
+  ] = await Promise.all([getHotQuestions(), getTopTags()])
 
   return (
     <section className="custom-scrollbar background-light900_dark200 light-border shadow-light-300 sticky top-0 right-0 flex h-screen w-[350px] flex-col gap-6 overflow-y-auto border-l p-6 pt-36 max-xl:hidden dark:shadow-none">
@@ -55,7 +61,7 @@ const RightSidebar = async () => {
             title: "No tags found",
             message: "No tags has been created yet."
           }}
-          success={success}
+          success={successTags}
           render={(popularTags) => (
             <div className="mt-7 flex flex-col gap-4">
               {popularTags.map(({ id, name, num_questions }) => (
