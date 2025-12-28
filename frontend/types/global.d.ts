@@ -82,3 +82,9 @@ interface HasVotedResponse {
 interface CollectionBaseParams {
   questionId: number;
 }
+
+interface BadgeCount {
+  GOLD: number;
+  SILVER: number;
+  BRONZE: number;
+}
