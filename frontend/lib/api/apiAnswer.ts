@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type AnswerCreate, AnswerLoad, AnswerUpdate, AnswersForQuestionResponse } from '@/types/answer';
+import { type AnswerCreate, AnswerLoad, AnswerUpdate, AnswersForQuestionResponse, QuestionLoad } from '@/types/answer';
 
 export const apiAnswer = {
   getAnswer: (answerId: number): Promise<ActionResponse<AnswerLoad>> =>
@@ -35,4 +35,7 @@ export const apiAnswer = {
 
   getTotalAnswersByUser: (userId: number): Promise<ActionResponse<number>> =>
     fetchHandler(`/api/v1/answer/total-answers-by-user/${userId}`),
+
+  getUserQuestions: (userId: number): Promise<ActionResponse<QuestionLoad[]>> =>
+    fetchHandler(`/api/v1/answer/user-questions/${userId}`),
 };

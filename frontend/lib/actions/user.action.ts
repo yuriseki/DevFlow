@@ -6,12 +6,17 @@ import {
   PaginatedSearchParams,
 } from "@/types/global";
 import { UserLoad } from "@/types/user";
-import { GetUserSchema, PaginatedSearchParamsSchema } from "../validations";
+import {
+  GetUserQuestionsSchema,
+  GetUserSchema,
+  PaginatedSearchParamsSchema,
+} from "../validations";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
 import { apiUser } from "../api/apiUser";
 import { apiQuestion } from "../api/apiQuestion";
 import { apiAnswer } from "../api/apiAnswer";
+import { QuestionLoad } from "@/types/question";
 
 export async function getUsers(
   params: PaginatedSearchParams
@@ -73,7 +78,8 @@ export async function getUser(params: GetUserParams): Promise<
 
     if (!user) throw new Error("User not found");
 
-    const totalQuestionsResult = await apiQuestion.getTotalQuestionByUser(userId);
+    const totalQuestionsResult =
+      await apiQuestion.getTotalQuestionByUser(userId);
     const totalQuestions = totalQuestionsResult.data || 0;
     const totalAnswersResult = await apiAnswer.getTotalAnswersByUser(userId);
     const totalAnswers = totalAnswersResult.data || 0;
@@ -85,6 +91,51 @@ export async function getUser(params: GetUserParams): Promise<
         totalQuestions,
         totalAnswers,
       },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+interface GetUserQuestionsParams {
+  page?: number;
+  pageSize?: number;
+  userId: number;
+}
+
+export async function getUserQuestions(params: GetUserQuestionsParams): Promise<
+  ActionResponse<{
+    questions: QuestionLoad[];
+    isNext: boolean;
+    total: number;
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: GetUserQuestionsSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { page = 1, pageSize = 10, userId } = params;
+
+  try {
+    const result = await apiQuestion.getUserQuestions(userId, page, pageSize);
+
+    const { success, data, error } = result;
+
+    if (!success) {
+      throw new Error(error?.message);
+    }
+
+    const { questions = [], total } = data!;
+    const hasNext = total > (page - 1) * pageSize + questions?.length!;
+
+    return {
+      success: true,
+      data: { questions: questions!, isNext: hasNext, total: total! },
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;

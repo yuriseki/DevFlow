@@ -51,6 +51,11 @@ export interface QuestionUpdate {
   views?: number | null;
 }
 
+export interface UserQuestionsResponse {
+  questions?: QuestionLoad[] | null;
+  total: number;
+}
+
 export interface QuestionTagRelationship {
   question_id: number;
   tag_id: number;

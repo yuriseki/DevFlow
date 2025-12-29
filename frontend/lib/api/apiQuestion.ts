@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type QuestionCreate, QuestionLoad, QuestionUpdate } from '@/types/question';
+import { type QuestionCreate, QuestionLoad, QuestionUpdate, UserQuestionsResponse } from '@/types/question';
 
 export const apiQuestion = {
   getQuestion: (questionId: number): Promise<ActionResponse<QuestionLoad>> =>
@@ -39,4 +39,12 @@ export const apiQuestion = {
 
   getTotalQuestionByUser: (userId: number): Promise<ActionResponse<number>> =>
     fetchHandler(`/api/v1/question/total-questions-by-user/${userId}`),
+
+  getUserQuestions: (userId: number, page: number, pageSize: any): Promise<ActionResponse<UserQuestionsResponse>> => {
+    const params = new URLSearchParams();
+    if (userId !== undefined && userId !== null) params.append('user_id', userId.toString());
+    if (page !== undefined && page !== null) params.append('page', page.toString());
+    if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
+    return fetchHandler(`/api/v1/question/user-questions?${params.toString()}`);
+  },
 };

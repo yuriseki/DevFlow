@@ -79,3 +79,7 @@ class QuestionLoad(QuestionBase):
     author: Optional[UserLoad]
     answers: List[AnswerLoad] | None
     views: int | None = 0
+
+class UserQuestionsResponse(SQLModel):
+    questions: Optional[List[QuestionLoad]]
+    total: int = 0

@@ -12,6 +12,8 @@ from app.features.answer.models.answer import (
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.features.question.models.question import QuestionLoad
+
 from .services.answer_services import AnswerService
 
 router = APIRouter(prefix="/api/v1/answer", tags=["answer"])
@@ -120,3 +122,11 @@ async def get_total_answers_by_user(
 ):
     total = answer_service.get_total_answers_by_user(session, user_id)
     return total
+
+@router.get("/user-answers", response_model=List[QuestionLoad])
+async def get_user_answers(
+    user_id: int,
+    session: AsyncSession = Depends(get_session),
+):
+    pass
+

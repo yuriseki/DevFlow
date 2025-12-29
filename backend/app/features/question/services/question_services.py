@@ -1,5 +1,6 @@
 """This module provides the service for the Question feature."""
 
+from itertools import count
 from typing import Type, List
 
 from fastapi import HTTPException, status
@@ -9,7 +10,13 @@ from sqlalchemy import not_
 from sqlmodel import desc, select, func, or_
 
 from app.core.lib.base_model_service import BaseModelService
-from ..models.question import Question, QuestionCreate, QuestionLoad, QuestionUpdate
+from ..models.question import (
+    Question,
+    QuestionCreate,
+    QuestionLoad,
+    QuestionUpdate,
+    UserQuestionsResponse,
+)
 from ..models.question_tag_relationship import QuestionTagRelationship
 from ...tag.models.tag import Tag
 
@@ -288,11 +295,35 @@ class QuestionService(
         questions = result.scalars().all()
         return [QuestionLoad.model_validate(q) for q in questions]
 
-    async def get_total_question_by_user(self, session: AsyncSession, user_id: int) -> int:
-        smtm = (
-            select(func.count(Question.id))
-            .where(Question.user_id == user_id)
-        )
+    async def get_total_question_by_user(
+        self, session: AsyncSession, user_id: int
+    ) -> int:
+        smtm = select(func.count(Question.id)).where(Question.user_id == user_id)
 
         result = await session.scalar(smtm)
         return result
+
+    async def get_user_questions(
+        self, session: AsyncSession, user_id: int, page: int = 1, page_size: int = 10
+    ):
+        base_smtm = (
+            select(Question)
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.answers),
+                selectinload(Question.author),
+            )
+            .where(Question.author_id == user_id)
+            .order_by(desc(Question.views), desc(Question.upvotes))
+        )
+
+        paginated_smtm = base_smtm.offset((page - 1) * page_size).limit(page_size)
+        paginated_result = await session.execute(paginated_smtm)
+        questions = paginated_result.scalars().all()
+        questions_load = [QuestionLoad.model_validate(q) for q in questions]
+
+        count_smtm = select(func.count()).select_from(base_smtm.subquery())
+        count_result = await session.execute(count_smtm)
+        total = count_result.scalar() or 0
+
+        return UserQuestionsResponse(questions=questions_load, total=total)

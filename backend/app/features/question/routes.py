@@ -7,6 +7,7 @@ from app.features.question.models.question import (
     QuestionCreate,
     QuestionLoad,
     QuestionUpdate,
+    UserQuestionsResponse,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -133,3 +134,13 @@ async def get_total_question_by_user(
 ):
     total = question_service.get_total_question_by_user(session, user_id)
     return total
+
+@router.get("/user-questions", response_model=UserQuestionsResponse)
+async def get_user_questions(
+    user_id: int,
+    page: int = 1,
+    page_size: int = 10,
+    session: AsyncSession = Depends(get_session),
+):
+    questions = await question_service.get_user_questions(session, user_id, page, page_size)
+    return questions
