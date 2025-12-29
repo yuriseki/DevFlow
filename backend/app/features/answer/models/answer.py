@@ -68,3 +68,6 @@ class AnswersForQuestionResponse(SQLModel):
 
     answers: List[AnswerLoad]
     total: int
+
+class UserAnswersResponse(AnswersForQuestionResponse):
+    pass

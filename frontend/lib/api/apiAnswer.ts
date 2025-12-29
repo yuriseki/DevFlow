@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type AnswerCreate, AnswerLoad, AnswerUpdate, AnswersForQuestionResponse, QuestionLoad } from '@/types/answer';
+import { type AnswerCreate, AnswerLoad, AnswerUpdate, AnswersForQuestionResponse, UserAnswersResponse } from '@/types/answer';
 
 export const apiAnswer = {
   getAnswer: (answerId: number): Promise<ActionResponse<AnswerLoad>> =>
@@ -36,6 +36,11 @@ export const apiAnswer = {
   getTotalAnswersByUser: (userId: number): Promise<ActionResponse<number>> =>
     fetchHandler(`/api/v1/answer/total-answers-by-user/${userId}`),
 
-  getUserQuestions: (userId: number): Promise<ActionResponse<QuestionLoad[]>> =>
-    fetchHandler(`/api/v1/answer/user-questions/${userId}`),
+  getUserAnswers: (userId: number, page: number, pageSize: number): Promise<ActionResponse<UserAnswersResponse>> => {
+    const params = new URLSearchParams();
+    if (userId !== undefined && userId !== null) params.append('user_id', userId.toString());
+    if (page !== undefined && page !== null) params.append('page', page.toString());
+    if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
+    return fetchHandler(`/api/v1/answer/user-answers?${params.toString()}`);
+  },
 };

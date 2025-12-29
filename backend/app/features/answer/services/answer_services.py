@@ -1,15 +1,22 @@
 """This module provides the service for the Answer feature."""
 
-from typing import List, Type
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
-from sqlmodel import desc, func, select
+from typing import Type
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlmodel import desc, func, select
 
 from app.core.lib.base_model_service import BaseModelService
-from ..models.answer import Answer, AnswerCreate, AnswerLoad, AnswerUpdate, AnswersForQuestionResponse
+
+from ..models.answer import (
+    Answer,
+    AnswerCreate,
+    AnswerLoad,
+    AnswersForQuestionResponse,
+    AnswerUpdate,
+    UserAnswersResponse,
+)
 
 
 class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpdate]):
@@ -37,7 +44,9 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
         # The base BaseModelService includes a basic CRUD operation.
         # Feel free to override its functionality for more complex use cases.
 
-    async def create(self, session: AsyncSession, obj_in: AnswerCreate, commit: bool = True) -> AnswerLoad:
+    async def create(
+        self, session: AsyncSession, obj_in: AnswerCreate, commit: bool = True
+    ) -> AnswerLoad:
         obj = self.model(**obj_in.model_dump())
         session.add(obj)
         try:
@@ -91,17 +100,41 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
         answers = result.scalars().all()
         answers_list = [AnswerLoad.model_validate(answer) for answer in answers]
 
-        count_stmt = select(func.count()).select_from(Answer).where(Answer.question_id == question_id)
+        count_stmt = (
+            select(func.count())
+            .select_from(Answer)
+            .where(Answer.question_id == question_id)
+        )
         total_result = await session.execute(count_stmt)
         total = total_result.scalar() or 0
 
         return AnswersForQuestionResponse(answers=answers_list, total=total)
 
-    async def get_total_answers_by_user(self, session: AsyncSession, user_id: int) -> int:
-        smtm = (
-            select(func.count(Answer.id))
-            .where(Answer.user_id == user_id)
-        )
+    async def get_total_answers_by_user(
+        self, session: AsyncSession, user_id: int
+    ) -> int:
+        smtm = select(func.count(Answer.id)).where(Answer.user_id == user_id)
 
         result = await session.scalar(smtm)
         return result
+
+    async def get_user_answers(
+        self, session: AsyncSession, user_id: int, page: int = 1, page_size: int = 10
+    ) -> UserAnswersResponse:
+        base_smtm = (
+            select(Answer)
+            .options(selectinload(Answer.user))
+            .where(Answer.user_id == user_id)
+            .order_by(desc(Answer.created_at))
+        )
+
+        paginated_smtm = base_smtm.offset((page - 1) * page_size).limit(page_size)
+        paginated_result = await session.execute(paginated_smtm)
+        answers = paginated_result.scalars().all()
+        answers_load = [AnswerLoad.model_validate(a) for a in answers]
+
+        count_smtm = select(func.count()).select_from(base_smtm.subquery())
+        count_result = await session.execute(count_smtm)
+        total = count_result.scalar() or 0
+
+        return UserAnswersResponse(answers=answers_load, total=total)

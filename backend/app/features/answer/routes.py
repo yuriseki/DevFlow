@@ -8,6 +8,7 @@ from app.features.answer.models.answer import (
     AnswerLoad,
     AnswerUpdate,
     AnswersForQuestionResponse,
+    UserAnswersResponse,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -123,10 +124,12 @@ async def get_total_answers_by_user(
     total = answer_service.get_total_answers_by_user(session, user_id)
     return total
 
-@router.get("/user-answers", response_model=List[QuestionLoad])
+@router.get("/user-answers", response_model=UserAnswersResponse)
 async def get_user_answers(
     user_id: int,
+    page: int = 1,
+    page_size: int = 10,
     session: AsyncSession = Depends(get_session),
 ):
-    pass
-
+    answers = await answer_service.get_user_answers(session, user_id, page, page_size)
+    return answers

@@ -40,7 +40,7 @@ export const apiQuestion = {
   getTotalQuestionByUser: (userId: number): Promise<ActionResponse<number>> =>
     fetchHandler(`/api/v1/question/total-questions-by-user/${userId}`),
 
-  getUserQuestions: (userId: number, page: number, pageSize: any): Promise<ActionResponse<UserQuestionsResponse>> => {
+  getUserQuestions: (userId: number, page: number, pageSize: number): Promise<ActionResponse<UserQuestionsResponse>> => {
     const params = new URLSearchParams();
     if (userId !== undefined && userId !== null) params.append('user_id', userId.toString());
     if (page !== undefined && page !== null) params.append('page', page.toString());

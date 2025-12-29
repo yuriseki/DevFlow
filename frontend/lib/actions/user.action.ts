@@ -7,6 +7,7 @@ import {
 } from "@/types/global";
 import { UserLoad } from "@/types/user";
 import {
+  GetUserAnswersSchema,
   GetUserQuestionsSchema,
   GetUserSchema,
   PaginatedSearchParamsSchema,
@@ -17,6 +18,8 @@ import { apiUser } from "../api/apiUser";
 import { apiQuestion } from "../api/apiQuestion";
 import { apiAnswer } from "../api/apiAnswer";
 import { QuestionLoad } from "@/types/question";
+import { AnswerLoad } from "@/types/answer";
+import { error } from "console";
 
 export async function getUsers(
   params: PaginatedSearchParams
@@ -138,6 +141,53 @@ export async function getUserQuestions(params: GetUserQuestionsParams): Promise<
       data: { questions: questions!, isNext: hasNext, total: total! },
     };
   } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+interface GetUSerAnswersParams {
+  page?: number;
+  pageSize?: number;
+  userId: number;
+}
+
+export async function getUserAnswers(params: GetUSerAnswersParams): Promise<
+  ActionResponse<{
+    answers: AnswerLoad[];
+    isNext: boolean;
+    total: boolean;
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: GetUserAnswersSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { page = 1, pageSize = 10, userId } = params;
+
+  try {
+
+    const result = await apiAnswer.getUserAnswers(userId, page, pageSize);
+
+    const { success, data, error } = result;
+
+    if (!success) {
+      throw new Error(error?.message);
+    }
+
+    const { answers = [], total } = data!;
+    const hasNext = total > (page - 1) * pageSize + answers?.length!;
+
+    return {
+      success: true,
+      data: { answers: answers!, isNext: hasNext, total: total! },
+    };
+  }
+  catch(error) {
     return handleError(error) as ErrorResponse;
   }
 }
