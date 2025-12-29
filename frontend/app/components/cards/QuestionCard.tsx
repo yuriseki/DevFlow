@@ -1,4 +1,3 @@
-import React from "react";
 import { getTimeStamp } from "@/lib/utils";
 import Link from "next/link";
 import TagCard from "@/app/components/cards/TagCard";
@@ -7,19 +6,22 @@ import Metric from "@/app/components/cards/Metric";
 import SaveQuestion from "../answers/questions/SaveQuestion";
 import { hasSavedQuestion } from "@/lib/actions/collection.action";
 import { QuestionLoad } from "@/types/question";
+import EditDeleteActions from "@/app/(root)/profile/components/EditDeleteActions";
 
 interface Props {
   question: QuestionLoad;
+  showActionBtns: boolean;
 }
 
 const QuestionCard = ({
   question: { id, title, tags, author, created_at, upvotes, answers, views },
+  showActionBtns = false,
 }: Props) => {
   const hasSavedQuestionPromise = hasSavedQuestion({ questionId: parseInt("0" + id) });
   return (
-    <div className="card-wrapper rounded-[10px] p-9 sm:px-11">
-      <div className="flex flex-col-reverse items-start justify-between gap-5 sm:flex-row">
-        <div>
+    <div className="card-wrapper rounded-[10px] p-4 sm:px-11">
+      <div className="flex flex-col-reverse items-center justify-between gap-5 sm:flex-row">
+        <div className="flex-1">
           <span className="subtle-regular text-dark400_light700 line-clamp-1 flex sm:hidden">
             {getTimeStamp(created_at)}
           </span>
@@ -33,9 +35,11 @@ const QuestionCard = ({
             </h3>
           </Link>
         </div>
+
+        {showActionBtns && (<EditDeleteActions type="Question" itemId={id}/>)}
       </div>
       <div className="mt-3.5 flex w-full flex-wrap gap-2">
-        {tags.map((tag) => (
+        {tags && tags.map((tag) => (
           <TagCard
             key={tag.id}
             id={tag.id}

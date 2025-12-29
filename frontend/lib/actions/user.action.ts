@@ -19,7 +19,6 @@ import { apiQuestion } from "../api/apiQuestion";
 import { apiAnswer } from "../api/apiAnswer";
 import { QuestionLoad } from "@/types/question";
 import { AnswerLoad } from "@/types/answer";
-import { error } from "console";
 import { apiTag } from "../api/apiTag";
 import { UserTag } from "@/types/tag";
 

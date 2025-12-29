@@ -134,6 +134,7 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
                     <QuestionCard
                       key={question.id}
                       question={question}
+                      showActionBtns={loggedInUser?.user?.id === question.author_id.toString()}
                     />
                   ))}
                 </div>
@@ -156,6 +157,7 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
                       content={answer.content.slice(0, 300)}
                       containerClasses="card-wrapper rounded-[10px] px-7 py-9 sm:px-11"
                       showReadMore
+                      showActionBtns={loggedInUser?.user?.id === answer.user_id.toString()}
                     />
                   ))}
                 </div>

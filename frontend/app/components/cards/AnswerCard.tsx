@@ -7,21 +7,28 @@ import Preview from "../editor/preview"
 import Votes from "../votes/Votes"
 import { Suspense } from "react"
 import { hasVoted } from "@/lib/actions/vote.action"
+import EditDeleteActions from "@/app/(root)/profile/components/EditDeleteActions"
 
 interface Props extends AnswerLoad {
   containerClasses?: string;
   showReadMore?: boolean;
+  showActionBtns?: boolean;
 }
 
 
-const AnswerCard = ({ id, user, content, created_at, upvotes, downvotes, question_id, containerClasses, showReadMore = false }: Props) => {
+const AnswerCard = ({ id, user, content, created_at, upvotes, downvotes, question_id, containerClasses, showReadMore = false, showActionBtns = false }: Props) => {
   const hasvotedpromise = hasVoted({
     targetId: id,
     targetType: "answer",
   })
   return (
-    <article className={cn("light-border border-b py-10", containerClasses)}>
+    <article className={cn("light-border border-b py-10 relative", containerClasses)}>
       <span id={`answer-${id}`} className="hash-span" />
+      {showActionBtns && (
+        <div className="background-light800 flex-center absolute right-2 top-0.5 size-9 rounded-full">
+          <EditDeleteActions itemId={id} type="Answer" />
+        </div>
+      )}
       <div className="mb-5 flex flex-col-reverse justify-between gap-5 sm:flex-row sm:items-center sm:gap-2">
         <div className="flex flex-1 items-start gap-1 sm:items-center">
           <UserAvatar

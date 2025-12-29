@@ -18,9 +18,8 @@ export const SignUpSchema = z.object({
     }),
 
   email: z
-    .string()
-    .min(1, { message: "Email is required." })
-    .email({ message: "Please provide a valid email address." }),
+    .email()
+    .min(1, { message: "Email is required." }),
 
   password: z
     .string()
