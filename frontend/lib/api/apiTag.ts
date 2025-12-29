@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type QuestionLoad, TagCreate, TagLoad, TagUpdate } from '@/types/tag';
+import { type QuestionLoad, TagCreate, TagLoad, TagUpdate, UserTag } from '@/types/tag';
 
 export const apiTag = {
   getTag: (tagId: number): Promise<ActionResponse<TagLoad>> =>
@@ -45,4 +45,10 @@ export const apiTag = {
 
   getTopTags: (): Promise<ActionResponse<TagLoad[]>> =>
     fetchHandler(`/api/v1/tag/top-tags`),
+
+  getTopTagsUser: (userId: number): Promise<ActionResponse<UserTag[]>> => {
+    const params = new URLSearchParams();
+    if (userId !== undefined && userId !== null) params.append('user_id', userId.toString());
+    return fetchHandler(`/api/v1/tag/top-tags-user?${params.toString()}`);
+  },
 };

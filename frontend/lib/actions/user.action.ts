@@ -20,6 +20,8 @@ import { apiAnswer } from "../api/apiAnswer";
 import { QuestionLoad } from "@/types/question";
 import { AnswerLoad } from "@/types/answer";
 import { error } from "console";
+import { apiTag } from "../api/apiTag";
+import { UserTag } from "@/types/tag";
 
 export async function getUsers(
   params: PaginatedSearchParams
@@ -185,6 +187,46 @@ export async function getUserAnswers(params: GetUSerAnswersParams): Promise<
     return {
       success: true,
       data: { answers: answers!, isNext: hasNext, total: total! },
+    };
+  }
+  catch(error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+interface GetUSerTagsParams {
+  userId: number;
+}
+
+export async function getUserTopTags(params: GetUSerTagsParams): Promise<
+  ActionResponse<{
+    tags: UserTag[];
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: GetUserSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId } = params;
+
+  try {
+
+    const result = await apiTag.getTopTagsUser(userId);
+
+    const { success, data: userTags, error } = result;
+
+    if (!success) {
+      throw new Error(error?.message);
+    }
+
+    return {
+      success: true,
+      data: {tags: userTags!},
     };
   }
   catch(error) {

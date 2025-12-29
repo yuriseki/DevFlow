@@ -3,7 +3,7 @@
 from typing import List
 from app.core import get_session
 from app.features.question.models.question import Question, QuestionLoad
-from app.features.tag.models.tag import Tag, TagCreate, TagLoad, TagUpdate
+from app.features.tag.models.tag import Tag, TagCreate, TagLoad, TagUpdate, UserTag
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -128,3 +128,11 @@ async def get_tag_questions(
 async def get_top_tags(session: AsyncSession = Depends(get_session)):
     tags_load = await tag_service.get_top_tags(session)
     return tags_load
+
+@router.get("/top-tags-user", response_model=List[UserTag])
+async def get_top_tags_user(
+    user_id: int,
+    session: AsyncSession = Depends(get_session)
+):
+    user_tags = await tag_service.get_top_tags_user(session, user_id)
+    return user_tags

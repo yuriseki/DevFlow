@@ -1,6 +1,6 @@
 import UserAvatar from "@/app/components/navigation/UserAvatar";
 import { auth } from "@/auth";
-import { getUser, getUserAnswers, getUserQuestions } from "@/lib/actions/user.action";
+import { getUser, getUserAnswers, getUserQuestions, getUserTopTags } from "@/lib/actions/user.action";
 import { RouteParams } from "@/types/global";
 import { notFound } from "next/navigation";
 import ProfileLink from "../components/ProfileLink";
@@ -12,10 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DataRenderer from "@/components/DataRenderer";
 import QuestionCard from "@/app/components/cards/QuestionCard";
 import { QuestionLoad } from "@/types/question";
-import { EMPTY_ANSWERS, EMPTY_QUESTION } from "@/constants/states";
+import { EMPTY_ANSWERS, EMPTY_QUESTION, EMPTY_TAGS } from "@/constants/states";
 import Pagination from "@/app/components/Pagination";
 import { AnswerLoad } from "@/types/answer";
 import AnswerCard from "@/app/components/cards/AnswerCard";
+import TagCard from "@/app/components/cards/TagCard";
 
 const Profile = async ({ params, searchParams }: RouteParams) => {
   const { id } = await params;
@@ -45,14 +46,20 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
   });
 
   const { questions, isNext: questionsIsNext } = questionsData!;
-  
+
   const { success: answersSuccess, data: answersData, error: answersError } = await getUserAnswers({
     userId: parseInt(id),
     page: Number(page) || 1,
-    pageSize: Number(pageSize) || 2,
+    pageSize: Number(pageSize) || 10,
   });
 
   const { answers, isNext: answersIsNext } = answersData!;
+
+  const { success: tagsSuccess, data: tagsData, error: tagsError } = await getUserTopTags({
+    userId: parseInt(id),
+  });
+
+  const { tags } = tagsData!;
 
   return (
     <>
@@ -134,7 +141,7 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
             />
             <Pagination page={page} isNext={questionsIsNext} />
           </TabsContent>
-          <TabsContent value="answers" className="flex w-full flex-col gap-6">
+          <TabsContent value="answers" className="mt-5 flex w-full flex-col gap-6">
             <DataRenderer
               data={answers}
               empty={EMPTY_ANSWERS}
@@ -161,7 +168,26 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
         <div className="flex w-full min-w-62.5 flex-1 flex-col max-lg:hidden">
           <h3 className="h3-bold text-dark200_light900">Top Tech</h3>
           <div className="mt-7 flex-col gap-4">
-            <p>List of tags</p>
+            <DataRenderer
+              data={tags}
+              empty={EMPTY_TAGS}
+              success={tagsSuccess}
+              error={tagsError}
+              render={(tags) => (
+                <div className="mt-3 flex w-full flex-col gap-4">
+                  {tags.map((tag) => (
+                    <TagCard
+                      key={tag.id}
+                      id={tag.id}
+                      name={tag.name}
+                      questions={tag.total}
+                      showCount
+                      compact
+                    />
+                  ))}
+                </div>
+              )}
+            />
           </div>
         </div>
       </section>

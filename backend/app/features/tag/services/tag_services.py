@@ -8,12 +8,13 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import and_, col, func, or_, select
 
 from app.core.lib.base_model_service import BaseModelService
+from app.features.answer.models.answer import Answer
 from app.features.question.models.question import Question, QuestionLoad
 from app.features.question.models.question_tag_relationship import (
     QuestionTagRelationship,
 )
 
-from ..models.tag import Tag, TagCreate, TagLoad, TagUpdate
+from ..models.tag import Tag, TagCreate, TagLoad, TagUpdate, UserTag
 
 
 class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
@@ -41,7 +42,9 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         # The base BaseModelService includes a basic CRUD operation.
         # Feel free to override its functionality for more complex use cases.
 
-    async def create(self, session: AsyncSession, obj_in: TagCreate, commit: bool = True) -> TagLoad:
+    async def create(
+        self, session: AsyncSession, obj_in: TagCreate, commit: bool = True
+    ) -> TagLoad:
         """Creates a new tag instance."""
         name = obj_in.name.lower().strip()
         tag_load = await self.load_by_name(session, name)
@@ -123,7 +126,6 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         if filter == "recommended":
             order = desc(Question.upvotes)
 
-
         smtm = (
             select(Question)
             .join(QuestionTagRelationship)
@@ -150,7 +152,9 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         result = await session.execute(smtm)
         questions = result.scalars().all()
 
-        questions_load = [QuestionLoad.model_validate(question) for question in questions]
+        questions_load = [
+            QuestionLoad.model_validate(question) for question in questions
+        ]
 
         return questions_load
 
@@ -165,3 +169,26 @@ class TagService(BaseModelService[Tag, TagCreate, TagLoad, TagUpdate]):
         tags = result.scalars().all()
         return [TagLoad.model_validate(t) for t in tags]
 
+    async def get_top_tags_user(
+        self, session: AsyncSession, user_id: int
+    ) -> List[UserTag]:
+        smtm = (
+            select(Tag.id, Tag.name, func.count(Tag.id).label("total"))
+            .select_from(Tag)
+            .outerjoin(
+                QuestionTagRelationship, QuestionTagRelationship.tag_id == Tag.id
+            )
+            .outerjoin(Question, Question.id == QuestionTagRelationship.question_id)
+            .outerjoin(
+                Answer, Answer.question_id == QuestionTagRelationship.question_id
+            )
+            .where(or_(Question.author_id == user_id, Answer.user_id == user_id))
+            .limit(10)
+            .group_by(Tag.name, Tag.id)
+            .order_by(func.count(Tag.id).desc())
+        )
+        result = await session.execute(smtm)
+        rows = result.mappings().all()
+        user_tags = [UserTag.model_validate(row) for row in rows]
+
+        return user_tags

@@ -61,3 +61,8 @@ class TagLoad(TagBase):
     created_at: datetime
     updated_at: Optional[datetime]
     num_questions: int
+
+class UserTag(SQLModel):
+    id: int
+    name: str
+    total: int = 0

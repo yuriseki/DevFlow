@@ -24,3 +24,9 @@ export interface TagLoad extends TagBase {
 }
 
 export type TagUpdate = object;
+
+export interface UserTag {
+  id: number;
+  name: string;
+  total: number;
+}
