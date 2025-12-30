@@ -1,9 +1,9 @@
 """This module defines the data models for the UserCollection feature."""
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List
 
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.features.question.models.question import Question, QuestionLoad
 from app.features.user.models.user import User
@@ -16,7 +16,7 @@ class UserCollectionBase(SQLModel):
 
 
 class UserCollection(SQLModel, table=True):
-    __tablename__ = "user_collection"
+    __tablename__ = "user_collection" # pyright: ignore
     """Represents the UserCollection table in the database."""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime | None = Field(

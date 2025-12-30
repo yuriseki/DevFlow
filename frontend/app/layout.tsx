@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
 
 const inter = localFont({
   src: "./fonts/InterVF.ttf",
@@ -33,27 +34,32 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // const session = async () => {
-  //   // This approach has an issue of always returning authenticated in the 
-  //   // client side.
-  //   // "use cache";
-  //   return await auth();
-  // };
+  const session1 = async () => {
+    // This approach has an issue of always returning authenticated in the 
+    // client side.
+    "use cache";
+    return await auth();
+  };
 
   const session = await auth();
 
+  function Loading() {
+    return <body><div>Loading...</div></body>;
+  }
+
   return (
-      <html
-        lang="en"
-        suppressHydrationWarning
-      >
-        <head>
-          <link
-            rel="stylesheet"
-            type="text/css"
-            href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
-          />
-        </head>
+    <html
+      lang="en"
+      suppressHydrationWarning
+    >
+      <head>
+        <link
+          rel="stylesheet"
+          type="text/css"
+          href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
+        />
+      </head>
+      <Suspense fallback={<Loading />}>
         <SessionProvider session={session}>
           <body
             className={`${inter.className} ${spaceGrotesk.variable} antialiased`}
@@ -69,6 +75,7 @@ export default async function RootLayout({
             <Toaster />
           </body>
         </SessionProvider>
-      </html>
+      </Suspense>
+    </html>
   );
 }

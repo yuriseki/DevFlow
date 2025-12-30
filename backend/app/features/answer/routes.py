@@ -81,7 +81,7 @@ async def update(
     return await answer_service.update(session, answer_update)
 
 
-@router.delete("/delete/{answer_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/delete/{answer_id}", status_code=status.HTTP_200_OK)
 async def delete(answer_id: int, session: AsyncSession = Depends(get_session)):
     """Deletes a Answer.
 
@@ -121,7 +121,7 @@ async def get_answers_for_question(
 async def get_total_answers_by_user(
     user_id: int, session: AsyncSession = Depends(get_session)
 ):
-    total = answer_service.get_total_answers_by_user(session, user_id)
+    total = await answer_service.get_total_answers_by_user(session, user_id)
     return total
 
 @router.get("/user-answers", response_model=UserAnswersResponse)

@@ -1,5 +1,6 @@
 """This module provides the routes for the UserCollection feature."""
 
+from typing import Optional
 from app.core import get_session
 from app.features.question.models import question
 from app.features.user_collection.models.user_collection import (
@@ -21,16 +22,16 @@ user_collection_service = UserCollectionService(
 )
 
 
-@router.get("/load/{user_id}/{question_id}", response_model=UserCollectionLoad)
+@router.get(
+    "/load/{user_id}/{question_id}", response_model=Optional[UserCollectionLoad]
+)
 async def get_user_collection(
     user_id: int, question_id: int, session: AsyncSession = Depends(get_session)
 ):
     """Loads a UserCollection by its user_id and question_id."""
     user_collection = await user_collection_service.load(session, user_id, question_id)
     if not user_collection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="UserCollection not found"
-        )
+        return None
     return user_collection
 
 

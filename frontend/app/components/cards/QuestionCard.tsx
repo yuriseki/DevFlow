@@ -20,23 +20,23 @@ const QuestionCard = ({
   const hasSavedQuestionPromise = hasSavedQuestion({ questionId: parseInt("0" + id) });
   return (
     <div className="card-wrapper rounded-[10px] p-4 sm:px-11">
-      <div className="flex flex-col-reverse items-center justify-between gap-5 sm:flex-row">
-        <div className="flex-1">
+      <div className="flex items-center justify-between gap-5 flex-row">
+        <div className="flex-1 flex flex-between  gap-4 items-stretch">
           <span className="subtle-regular text-dark400_light700 line-clamp-1 flex sm:hidden">
             {getTimeStamp(created_at)}
           </span>
-          <SaveQuestion
-            questionId={parseInt("0" + id )}
-            hasSavedQuestionPromise={hasSavedQuestionPromise}
-          />
-          <Link href={ROUTES.QUESTION(parseInt("0" + id))}>
-            <h3 className="sm:h3-semibold base-semibold text-dark200_light900 line-clamp-1 flex-1">
-              {title}
-            </h3>
-          </Link>
+            <Link href={ROUTES.QUESTION(parseInt("0" + id))}>
+              <h3 className="sm:h3-semibold base-semibold text-dark200_light900 line-clamp-1 flex-1">
+                {title}
+              </h3>
+            </Link>
+            <SaveQuestion
+              questionId={parseInt("0" + id)}
+              hasSavedQuestionPromise={hasSavedQuestionPromise}
+            />
         </div>
 
-        {showActionBtns && (<EditDeleteActions type="Question" itemId={id}/>)}
+        {showActionBtns && (<EditDeleteActions type="Question" itemId={id} />)}
       </div>
       <div className="mt-3.5 flex w-full flex-wrap gap-2">
         {tags && tags.map((tag) => (

@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { deleteQuestion } from "@/lib/actions/questions.action";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -30,9 +31,21 @@ const EditDeleteActions = ({ type, itemId }: Props) => {
   const handleDelete = async () => {
 
     if (type === 'Question') {
-      // Call api to delete the question.
+      try {
+        const { success, error } = await deleteQuestion({ questionId: itemId });
+        if (!success) {
+          toast.error("Error deleting question", { description: "Error deleting quesiton." + error?.message })
+        }
+        else {
+          toast.success("Question deleted", { description: "Your question has been deleted sussessfully." })
+          // Revalidate current path to update the list
+          router.refresh();
+        }
+      }
+      catch (error) {
+        toast.error("Error deleting question", { description: "Error deleting quesiton." })
+      }
 
-      toast.success("Question deleted", { description: "Your question has been deleted sussessfully." })
     } else if (type === "Answer") {
       // Call api to delete answer.
       toast.success("Answer deleted", { description: "Your answer has been deleted sussessfully." })

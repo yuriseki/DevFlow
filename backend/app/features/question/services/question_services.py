@@ -7,9 +7,12 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import not_
-from sqlmodel import desc, select, func, or_
+from sqlmodel import delete, desc, select, func, or_
 
 from app.core.lib.base_model_service import BaseModelService
+from app.features.answer.models.answer import Answer
+from app.features.user_collection.models.user_collection import UserCollection
+from app.features.vote.models.vote import TargetVote, Vote, VoteType
 from ..models.question import (
     Question,
     QuestionCreate,
@@ -47,6 +50,34 @@ class QuestionService(
         super().__init__(model, create_schema, load_schema, update_schema)
         # The base BaseModelService includes a basic CRUD operation.
         # Feel free to override its functionality for more complex use cases.
+
+    async def delete(self, session: AsyncSession, id: int, commit: bool = True) -> None:
+        # Delete associated answers
+        await session.execute(delete(Answer).where(Answer.question_id == id))
+
+        # Delete associated tags relationships
+        await session.execute(
+            delete(QuestionTagRelationship).where(
+                QuestionTagRelationship.question_id == id
+            )
+        )
+
+        # Delete user_collection
+        await session.execute(
+            delete(UserCollection).where(UserCollection.question_id == id)
+        )
+
+        # Delete vote
+        await session.execute(
+            delete(Vote).where(
+                Vote.target_id == id, Vote.target_vote == TargetVote.QUESTION
+            )
+        )
+
+        # Delete the question itself
+        await session.execute(delete(Question).where(Question.id == id))
+        if commit:
+            await session.commit()
 
     async def load(self, session: AsyncSession, id: int) -> QuestionLoad | None:
         result = await session.execute(
@@ -298,7 +329,11 @@ class QuestionService(
     async def get_total_question_by_user(
         self, session: AsyncSession, user_id: int
     ) -> int:
-        smtm = select(func.count(Question.id)).where(Question.user_id == user_id)
+        smtm = (
+            select(func.count(Question.id))
+            .select_from(Question)
+            .where(Question.author_id == user_id)
+        )
 
         result = await session.scalar(smtm)
         return result

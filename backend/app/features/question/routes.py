@@ -87,7 +87,7 @@ async def update(
     return await question_service.update(session, question_update)
 
 
-@router.delete("/delete/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/delete/{question_id}", status_code=status.HTTP_200_OK)
 async def delete(question_id: int, session: AsyncSession = Depends(get_session)):
     """Deletes a Question.
 
@@ -103,7 +103,7 @@ async def delete(question_id: int, session: AsyncSession = Depends(get_session))
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Question not found"
         )
-    await question_service.delete(session, db_obj)
+    await question_service.delete(session, question_id)
     return {"message": "Question deleted successfully"}
 
 
@@ -132,7 +132,7 @@ async def get_hot_questions(session: AsyncSession = Depends(get_session)):
 async def get_total_question_by_user(
     user_id: int, session: AsyncSession = Depends(get_session)
 ):
-    total = question_service.get_total_question_by_user(session, user_id)
+    total = await question_service.get_total_question_by_user(session, user_id)
     return total
 
 @router.get("/user-questions", response_model=UserQuestionsResponse)

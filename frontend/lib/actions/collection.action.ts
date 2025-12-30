@@ -72,7 +72,7 @@ export async function hasSavedQuestion(
       parseInt(userId),
       questionId
     );
-    const isInUserCollection = result.success;
+    const isInUserCollection = result.data ? true : false;
 
     return {
       success: true,

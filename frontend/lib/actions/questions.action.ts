@@ -20,6 +20,7 @@ import { apiQuestion } from "@/lib/api/apiQuestion";
 import { apiAccount } from "@/lib/api/apiAccount";
 import handleError from "@/lib/handlers/error";
 import {
+  DeleteQuestionSchema,
   IncrementViewsSchema,
   PaginatedSearchParamsSchema,
 } from "../validations";
@@ -191,6 +192,62 @@ export async function getHotQuestions(): Promise<
     return {
       success: true,
       data: questions,
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+interface deleteQuestionParams {
+  questionId: number;
+}
+
+export async function deleteQuestion(params: deleteQuestionParams): Promise<
+  ActionResponse<{
+    success: boolean;
+    error?: string;
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: DeleteQuestionSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { questionId } = validationResult.params!;
+  const sessionUserId = (validationResult?.session?.user as ExtendedUser)?.id;
+
+  if (!sessionUserId) {
+    throw new Error("Only authenticated users can delete questions.");
+  }
+
+  // Check if the current user is the author of the question.
+  const {
+    success: successQuestion,
+    data: question,
+    error: errorQuestion,
+  } = await apiQuestion.getQuestion(questionId);
+
+  if (!successQuestion) {
+    throw new Error("Error deleting quesiton: " + errorQuestion?.message);
+  }
+
+  if (question?.author_id !== parseInt(sessionUserId)) {
+    throw new Error("You can only delete the questions you are the author.");
+  }
+
+  try {
+    const { success, error } = await apiQuestion.delete(questionId);
+    if (!success) {
+      throw new Error("Error deleting quesiton: " + error?.message);
+    }
+
+    return {
+      success: true,
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;
