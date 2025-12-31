@@ -3,6 +3,7 @@
 import action from "@/lib/handlers/action";
 import {
   AnswerServeSchema as AnswerServerSchema,
+  DeleteAnswerSchema,
   GetAnswersSchema,
 } from "@/lib/validations";
 import { AccountLoad } from "@/types/account";
@@ -16,6 +17,8 @@ import {
 import { apiAccount } from "../api/apiAccount";
 import { apiAnswer } from "../api/apiAnswer";
 import handleError from "../handlers/error";
+import { createInteraction } from "./interaction.action";
+import { ActionContentType, ActionType } from "@/types/interaction";
 
 type AnswerInput = {
   content: string;
@@ -57,6 +60,13 @@ export async function createAnswer(
     return handleError(result.error) as ErrorResponse;
   }
 
+  // Update user reputation.
+  await createInteraction({
+    contentType: ActionContentType.ANSWER,
+    targetId: result.data!.id,
+    actionType: ActionType.POST,
+  });
+
   return { success: result.success, data: result.data };
 }
 
@@ -82,7 +92,7 @@ export async function getAnswers(params: GetAnswersParams): Promise<
     question_id,
     page,
     pageSize,
-    filter,
+    filter
   );
 
   if (!result.success) {
@@ -90,10 +100,79 @@ export async function getAnswers(params: GetAnswersParams): Promise<
   }
 
   const totalAnswers = result.data?.total || 0;
-  const hasNext = totalAnswers > ((page -1) * pageSize) + result.data!.answers.length;
+  const hasNext =
+    totalAnswers > (page - 1) * pageSize + result.data!.answers.length;
 
   return {
     success: true,
-    data: { answers: result.data!.answers, isNext: hasNext, totalAnswers: totalAnswers },
+    data: {
+      answers: result.data!.answers,
+      isNext: hasNext,
+      totalAnswers: totalAnswers,
+    },
   };
+}
+
+interface deleteAnswerParams {
+  answerId: number;
+}
+
+export async function deleteAnswer(params: deleteAnswerParams): Promise<
+  ActionResponse<{
+    success: boolean;
+    error?: string;
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: DeleteAnswerSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { answerId } = validationResult.params!;
+  const sessionUserId = (validationResult?.session?.user as ExtendedUser)?.id;
+
+  if (!sessionUserId) {
+    throw new Error("Only authenticated users can delete answers.");
+  }
+
+  // Check if the user is the author of the answer.
+  const {
+    success: successAnswer,
+    data: answer,
+    error: errorAnswer,
+  } = await apiAnswer.getAnswer(answerId);
+
+  if (!successAnswer) {
+    throw new Error("Error deleting answer: " + errorAnswer?.message);
+  }
+
+  if (answer?.user_id !== parseInt(sessionUserId)) {
+    throw new Error("You can only delete answers you are the author");
+  }
+
+  try {
+    const { success, error } = await apiAnswer.delete(answerId);
+
+    if (!success) {
+      throw new Error("Error deleting question: " + error?.message);
+    }
+
+    // Update user reputation.
+    await createInteraction({
+      contentType: ActionContentType.ANSWER,
+      targetId: answerId,
+      actionType: ActionType.DELETE,
+    });
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
 }

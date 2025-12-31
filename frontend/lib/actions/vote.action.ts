@@ -14,11 +14,12 @@ import {
   TargetVote,
   VoteType,
   VoteFind,
-  VoteLoad,
 } from "@/types/vote";
 import { apiVote } from "../api/apiVote";
 import { revalidatePath } from "next/cache";
 import ROUTES from "@/constants/routes";
+import { createInteraction } from "./interaction.action";
+import { ActionContentType, ActionType } from "@/types/interaction";
 type VoteParams = {
   targetId: number;
   targetType: "question" | "answer";
@@ -53,6 +54,16 @@ export async function CreateVote(
   };
 
   const result = await apiVote.doVote(vote);
+  // Update user reputation.
+  await createInteraction({
+    contentType:
+      targetType == TargetVote.ANSWER
+        ? ActionContentType.ANSWER
+        : ActionContentType.QUESTION,
+    targetId: targetId,
+    actionType:
+      voteType == VoteType.UPVOTE ? ActionType.UPVOTE : ActionType.DOWNVOTE,
+  });
 
   revalidatePath(ROUTES.QUESTION(targetId));
 

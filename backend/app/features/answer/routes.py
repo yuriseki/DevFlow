@@ -1,19 +1,17 @@
 """This module provides the routes for the Answer feature."""
 
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from app.core import get_session
 from app.features.answer.models.answer import (
     Answer,
     AnswerCreate,
     AnswerLoad,
-    AnswerUpdate,
     AnswersForQuestionResponse,
+    AnswerUpdate,
     UserAnswersResponse,
 )
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel.ext.asyncio.session import AsyncSession
-
-from app.features.question.models.question import QuestionLoad
 
 from .services.answer_services import AnswerService
 
@@ -38,7 +36,9 @@ async def get_answer(answer_id: int, session: AsyncSession = Depends(get_session
     """
     answer = await answer_service.load(session, answer_id)
     if not answer:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found"
+        )
     return answer
 
 
@@ -77,7 +77,9 @@ async def update(
     """
     db_obj = await answer_service.load(session, answer_id)
     if not db_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found"
+        )
     return await answer_service.update(session, answer_update)
 
 
@@ -94,12 +96,16 @@ async def delete(answer_id: int, session: AsyncSession = Depends(get_session)):
     """
     db_obj = await answer_service.load(session, answer_id)
     if not db_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found")
-    await answer_service.delete(session, db_obj)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Answer not found"
+        )
+    await answer_service.delete(session, answer_id)
     return {"message": "Answer deleted successfully"}
 
 
-@router.get("/answers-for-question/{question_id}", response_model=AnswersForQuestionResponse)
+@router.get(
+    "/answers-for-question/{question_id}", response_model=AnswersForQuestionResponse
+)
 async def get_answers_for_question(
     question_id: int,
     page: int = 1,
@@ -115,7 +121,10 @@ async def get_answers_for_question(
         page_size: Number of answers per page.
         session: The database session.
     """
-    return await answer_service.get_answers_for_question(session, question_id, page, page_size, filter)
+    return await answer_service.get_answers_for_question(
+        session, question_id, page, page_size, filter
+    )
+
 
 @router.get("/total-answers-by-user/{user_id}", response_model=int)
 async def get_total_answers_by_user(
@@ -123,6 +132,7 @@ async def get_total_answers_by_user(
 ):
     total = await answer_service.get_total_answers_by_user(session, user_id)
     return total
+
 
 @router.get("/user-answers", response_model=UserAnswersResponse)
 async def get_user_answers(

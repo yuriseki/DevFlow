@@ -5,9 +5,10 @@ from typing import Type
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlmodel import desc, func, select
+from sqlmodel import delete, desc, func, select
 
 from app.core.lib.base_model_service import BaseModelService
+from app.features.vote.models.vote import TargetVote, Vote
 
 from ..models.answer import (
     Answer,
@@ -22,7 +23,8 @@ from ..models.answer import (
 class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpdate]):
     """The service for the Answer feature.
 
-    This class inherits from BaseModelService and provides the business logic for the Answer feature.
+    This class inherits from BaseModelService and provides the business logic for
+    the Answer feature.
     """
 
     def __init__(
@@ -44,6 +46,16 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
         # The base BaseModelService includes a basic CRUD operation.
         # Feel free to override its functionality for more complex use cases.
 
+    async def load(self, session: AsyncSession, id: int) -> AnswerLoad | None:
+        smtm = select(Answer).options(selectinload(Answer.user)).where(Answer.id == id)
+
+        result = await session.execute(smtm)
+        answer = result.scalar_one_or_none()
+        if not answer:
+            return None
+
+        return AnswerLoad.model_validate(answer)
+
     async def create(
         self, session: AsyncSession, obj_in: AnswerCreate, commit: bool = True
     ) -> AnswerLoad:
@@ -59,10 +71,23 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
             await session.rollback()
             raise e
 
+    async def delete(self, session: AsyncSession, id: int, commit: bool = True) -> None:
+        # Delete vote
+        await session.execute(
+            delete(Vote).where(
+                Vote.target_id == id, Vote.target_vote == TargetVote.ANSWER
+            )
+        )
+
+        # Delete the answer itself.
+        await session.execute(delete(Answer).where(Answer.id == id))
+        if commit:
+            await session.commit()
+
     async def get_answers_for_question(
         self,
         session: AsyncSession,
-        question_id,
+        question_id: int,
         page: int = 1,
         page_size: int = 10,
         filter: str = "",
@@ -72,12 +97,13 @@ class AnswerService(BaseModelService[Answer, AnswerCreate, AnswerLoad, AnswerUpd
 
         Args:
             session (AsyncSession): The async database session.
-            question_id: The ID of the question to get answers for.
+            question_id (int): The ID of the question to get answers for.
             page (int): The page number (default 1).
             page_size (int): Number of answers per page (default 10).
 
         Returns:
-            AnswersForQuestionResponse: Object containing the list of answers and total count.
+            AnswersForQuestionResponse: Object containing the list of answers and
+            total count.
         """
         order = desc(Answer.upvotes)
         if filter == "popular":

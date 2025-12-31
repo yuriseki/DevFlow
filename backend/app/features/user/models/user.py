@@ -28,13 +28,14 @@ class UserBase(SQLModel):
 class User(UserBase, table=True):
     """Represents the User table in the database."""
 
-    id: int | None = Field(primary_key=True)
+    id: int = Field(primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime | None = Field(default_factory=lambda: datetime.now(timezone.utc))
     accounts: Optional[List["Account"]] = Relationship(back_populates="user")
     questions: Optional[List["Question"]] = Relationship(back_populates="author")
     answers: Optional[List["Answer"]] = Relationship(back_populates="user")
     collection: Optional[List["UserCollection"]] = Relationship(back_populates="user")
+    reputation: float = 0
 
 
 class UserCreate(UserBase):

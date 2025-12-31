@@ -8,7 +8,7 @@ export interface AccountBase {
   image?: string | null;
   provider: string;
   provider_account_id: string;
-  user_id?: number | null;
+  user_id: number;
 }
 
 export interface Account extends AccountBase {

@@ -22,13 +22,14 @@ export interface GetUsersResponse {
 }
 
 export interface User extends UserBase {
-  id?: number | null;
+  id: number;
   created_at: string;
   updated_at?: string | null;
   accounts?: Account[] | null;
   questions?: Question[] | null;
   answers?: Answer[] | null;
   collection?: UserCollection[] | null;
+  reputation: number;
 }
 
 export type UserCreate = UserBase;

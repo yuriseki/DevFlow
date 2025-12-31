@@ -2,26 +2,12 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type InteractionCreate, InteractionLoad, InteractionUpdate } from '@/types/interaction';
+import { type InteractionCreate } from '@/types/interaction';
 
 export const apiInteraction = {
-  getInteraction: (interactionId: number): Promise<ActionResponse<InteractionLoad>> =>
-    fetchHandler(`/api/v1/interaction/load/${interactionId}`),
-
-  create: (interaction: InteractionCreate): Promise<ActionResponse<InteractionLoad>> =>
+  create: (interaction: InteractionCreate): Promise<ActionResponse<void>> =>
     fetchHandler(`/api/v1/interaction/create`, {
       method: "POST",
       body: JSON.stringify(interaction)
-    }),
-
-  update: (interactionId: number, interaction_update: InteractionUpdate): Promise<ActionResponse<InteractionLoad>> =>
-    fetchHandler(`/api/v1/interaction/update/${interactionId}`, {
-      method: "PUT",
-      body: JSON.stringify(interaction_update)
-    }),
-
-  delete: (interactionId: number): Promise<ActionResponse<void>> =>
-    fetchHandler(`/api/v1/interaction/delete/${interactionId}`, {
-      method: "DELETE"
     }),
 };

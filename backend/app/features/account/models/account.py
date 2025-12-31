@@ -17,7 +17,7 @@ class AccountBase(SQLModel):
     image: str | None
     provider: str
     provider_account_id: str
-    user_id: int | None = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="user.id")
 
 
 class Account(AccountBase, table=True):

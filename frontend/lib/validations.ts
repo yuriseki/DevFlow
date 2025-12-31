@@ -17,9 +17,7 @@ export const SignUpSchema = z.object({
       message: "Name can only contain letters and spaces.",
     }),
 
-  email: z
-    .email()
-    .min(1, { message: "Email is required." }),
+  email: z.email().min(1, { message: "Email is required." }),
 
   password: z
     .string()
@@ -111,5 +109,15 @@ export const GetUserAnswersSchema = PaginatedSearchParamsSchema.extend({
 });
 
 export const DeleteQuestionSchema = z.object({
-  questionId: z.int().min(1, {error: "Question id is required."}),
-})
+  questionId: z.int().min(1, { error: "Question id is required." }),
+});
+
+export const DeleteAnswerSchema = z.object({
+  answerId: z.int().min(1, { error: "Answer id is required." }),
+});
+
+export const CreateInteractionSchema = z.object({
+  contentType: z.string().min(1, { error: "Content type is required." }),
+  targetId: z.int().min(1, { error: "Target ID is required." }),
+  actionType: z.string().min(1, { error: "Action type is required." }),
+});

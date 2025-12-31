@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { deleteAnswer } from "@/lib/actions/answer.action";
 import { deleteQuestion } from "@/lib/actions/questions.action";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -34,7 +35,7 @@ const EditDeleteActions = ({ type, itemId }: Props) => {
       try {
         const { success, error } = await deleteQuestion({ questionId: itemId });
         if (!success) {
-          toast.error("Error deleting question", { description: "Error deleting quesiton." + error?.message })
+          toast.error("Error deleting question", { description: error?.message })
         }
         else {
           toast.success("Question deleted", { description: "Your question has been deleted sussessfully." })
@@ -47,8 +48,18 @@ const EditDeleteActions = ({ type, itemId }: Props) => {
       }
 
     } else if (type === "Answer") {
-      // Call api to delete answer.
-      toast.success("Answer deleted", { description: "Your answer has been deleted sussessfully." })
+      try {
+        const { success, error } = await deleteAnswer({ answerId: itemId });
+        if (!success) {
+          toast.error("Error deleting answer", { description: error?.message })
+        } else {
+          router.refresh();
+          toast.success("Answer deleted", { description: "Your answer has been deleted sussessfully." })
+        }
+      }
+      catch (error) {
+        toast.error("Error deleting answer", { description: "The asnwer could not be deleted." })
+      }
     }
   };
   return (

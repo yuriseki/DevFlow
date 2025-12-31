@@ -24,6 +24,8 @@ import {
   IncrementViewsSchema,
   PaginatedSearchParamsSchema,
 } from "../validations";
+import { createInteraction } from "./interaction.action";
+import { ActionContentType, ActionType } from "@/types/interaction";
 
 export async function createQuestion(
   params: QuestionCreate
@@ -57,6 +59,13 @@ export async function createQuestion(
   if (!result.success) {
     return handleError(result.error) as ErrorResponse;
   }
+
+    // Update user reputation.
+    await createInteraction({
+      contentType: ActionContentType.QUESTION,
+      targetId: result.data!.id,
+      actionType: ActionType.POST,
+    });
 
   return { success: result.success, data: result.data };
 }
@@ -246,6 +255,14 @@ export async function deleteQuestion(params: deleteQuestionParams): Promise<
       throw new Error("Error deleting quesiton: " + error?.message);
     }
 
+    // Update user reputation.
+    await createInteraction({
+      contentType: ActionContentType.QUESTION,
+      targetId: questionId,
+      actionType: ActionType.DELETE,
+    });
+
+    
     return {
       success: true,
     };
