@@ -8,6 +8,7 @@ from sqlmodel import func, select, update
 from app.core.lib.base_model_service import BaseModelService
 from app.features.answer.models.answer import Answer
 from app.features.question.models.question import Question
+from app.features.user.models import user
 from app.features.user.models.user import User
 
 from ..models.interaction import (
@@ -109,7 +110,7 @@ class InteractionService(
         points_from_other_users_smtm = (
             select(func.sum(Interaction.other_points))
             .select_from(Interaction)
-            .where(Interaction.other_user_id == user_id)
+            .where(Interaction.other_user_id == user_id, Interaction.user_id != user_id)
         )
         result = await session.execute(points_from_other_users_smtm)
         total_from_others = result.scalar() or 0
