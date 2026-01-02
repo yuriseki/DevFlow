@@ -1,6 +1,6 @@
 import UserAvatar from "@/app/components/navigation/UserAvatar";
 import { auth } from "@/auth";
-import { getUser, getUserAnswers, getUserQuestions, getUserTopTags } from "@/lib/actions/user.action";
+import { getUser, getUserAnswers, getUserBadges, getUserQuestions, getUserTopTags } from "@/lib/actions/user.action";
 import { RouteParams } from "@/types/global";
 import { notFound } from "next/navigation";
 import ProfileLink from "../components/ProfileLink";
@@ -61,6 +61,8 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
 
   const { tags } = tagsData!;
 
+  const { success: badgesSuccess, data: badgesData, error: badgesError } = await getUserBadges({ userId: parseInt(id) })
+
   return (
     <>
       <section className="flex flex-col-reverse items-start justify-between sm:flex-row">
@@ -110,9 +112,9 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
         totalQuestions={totalQuestions}
         totalAnswers={totalAnswers}
         badges={{
-          GOLD: 0,
-          SILVER: 0,
-          BRONZE: 0,
+          GOLD: badgesData?.badges.gold || 0,
+          SILVER: badgesData?.badges.silver || 0,
+          BRONZE: badgesData?.badges.bronze || 0,
         }}
         reputationPoints={user.reputation || 0}
       ></Stats>

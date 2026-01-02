@@ -60,12 +60,12 @@ export async function createQuestion(
     return handleError(result.error) as ErrorResponse;
   }
 
-    // Update user reputation.
-    await createInteraction({
-      contentType: ActionContentType.QUESTION,
-      targetId: result.data!.id,
-      actionType: ActionType.POST,
-    });
+  // Update user reputation.
+  await createInteraction({
+    contentType: ActionContentType.QUESTION,
+    targetId: result.data!.id,
+    actionType: ActionType.POST,
+  });
 
   return { success: result.success, data: result.data };
 }
@@ -110,6 +110,13 @@ export async function getQuestion(
   }
 
   const { id } = validationResult.params!;
+
+    // Update user reputation.
+    await createInteraction({
+      contentType: ActionContentType.QUESTION,
+      targetId: id,
+      actionType: ActionType.VIEW,
+    });
 
   const result = await apiQuestion.getQuestion(id);
   if (!result.success) {
@@ -262,7 +269,6 @@ export async function deleteQuestion(params: deleteQuestionParams): Promise<
       actionType: ActionType.DELETE,
     });
 
-    
     return {
       success: true,
     };

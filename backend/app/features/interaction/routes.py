@@ -1,5 +1,7 @@
 """This module provides the routes for the Interaction feature."""
 
+from typing import List
+
 from fastapi import APIRouter, Depends, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -10,6 +12,7 @@ from app.features.interaction.models.interaction import (
     InteractionLoad,
     InteractionUpdate,
 )
+from app.features.question.models.question import QuestionLoad
 
 from .services.interaction_services import InteractionService
 
@@ -36,5 +39,12 @@ async def create(
     try:
         await interaction_service.create(session, interaction)
         return status.HTTP_200_OK
-    except Exception as e:
+    except Exception:
         return status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+@router.get("/recomendation/{user_id}", response_model=List[QuestionLoad])
+async def get_suggested_questions(
+    user_id: int, session: AsyncSession = Depends(get_session)
+):
+    return await interaction_service.get_suggested_questions(session, user_id)

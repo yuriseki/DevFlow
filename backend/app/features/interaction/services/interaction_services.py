@@ -1,14 +1,18 @@
 """This module provides the service for the Interaction feature."""
 
-from typing import Type
+from typing import List, Type
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlmodel import func, select, update
 
 from app.core.lib.base_model_service import BaseModelService
 from app.features.answer.models.answer import Answer
-from app.features.question.models.question import Question
-from app.features.user.models import user
+from app.features.question.models.question import Question, QuestionLoad
+from app.features.question.models.question_tag_relationship import (
+    QuestionTagRelationship,
+)
+from app.features.tag.models.tag import Tag
 from app.features.user.models.user import User
 
 from ..models.interaction import (
@@ -19,6 +23,7 @@ from ..models.interaction import (
     InteractionCreate,
     InteractionLoad,
     InteractionUpdate,
+    MostsInteractedTags,
 )
 
 
@@ -149,3 +154,69 @@ class InteractionService(
                 own_points = ActionPoints.POST_QUESTION
 
         return (own_points, other_points)
+
+    async def get_top_interacted_tags(
+        self, session: AsyncSession, user_id: int
+    ) -> List[MostsInteractedTags]:
+        stmt = (
+            select(Tag.id, Tag.name, func.count(Interaction.id).label("count"))
+            .join(Question, Interaction.target_id == Question.id)
+            .join(
+                QuestionTagRelationship,
+                QuestionTagRelationship.question_id == Question.id,
+            )
+            .join(Tag, Tag.id == QuestionTagRelationship.tag_id)
+            .where(
+                Interaction.content_type == ActionContentType.QUESTION,
+                Interaction.user_id == user_id,
+            )
+            .limit(5)
+            .group_by(Tag.id, Tag.name)
+            .order_by(func.count(Interaction.id).desc())
+        )
+        result = (await session.execute(stmt)).mappings().all()
+        return [MostsInteractedTags.model_validate(row) for row in result]
+
+    async def get_suggested_questions(
+        self, session: AsyncSession, user_id: int
+    ) -> List[QuestionLoad]:
+        interacted_tags = await self.get_top_interacted_tags(session, user_id)
+        if not interacted_tags:
+            return []  # Or raise an error, depending on requirements
+
+        tag_ids = [tag.id for tag in interacted_tags]
+
+        # Remove the questions that the user has already interacted with.
+        smtm = (
+            select(Interaction.target_id)
+            .where(
+                Interaction.user_id == user_id,
+                Interaction.content_type == ActionContentType.QUESTION,
+                Interaction.other_user_id != user_id,
+            )
+            .distinct()
+        )
+
+        interacted_questions = (await session.exec(smtm)).all()
+        interacted_question_ids = [row for row in interacted_questions] or []
+        smtm = (
+            select(Question)
+            .join(
+                QuestionTagRelationship,
+                QuestionTagRelationship.question_id == Question.id,
+            )
+            .where(
+                QuestionTagRelationship.tag_id.in_(tag_ids),
+                Question.id.not_in(interacted_question_ids),  # pyright: ignore
+                Question.author_id != user_id,
+            )
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.author),
+                selectinload(Question.answers),
+            )
+            .limit(5)
+        )
+
+        questions = (await session.exec(smtm)).all()
+        return [QuestionLoad.model_validate(q) for q in questions]

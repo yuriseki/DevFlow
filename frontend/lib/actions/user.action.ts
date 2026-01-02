@@ -21,6 +21,8 @@ import { QuestionLoad } from "@/types/question";
 import { AnswerLoad } from "@/types/answer";
 import { apiTag } from "../api/apiTag";
 import { UserTag } from "@/types/tag";
+import { Badges } from "@/types/badges";
+import { apiBadges } from "../api/apiBadges";
 
 export async function getUsers(
   params: PaginatedSearchParams
@@ -171,7 +173,6 @@ export async function getUserAnswers(params: GetUSerAnswersParams): Promise<
   const { page = 1, pageSize = 10, userId } = params;
 
   try {
-
     const result = await apiAnswer.getUserAnswers(userId, page, pageSize);
 
     const { success, data, error } = result;
@@ -187,8 +188,7 @@ export async function getUserAnswers(params: GetUSerAnswersParams): Promise<
       success: true,
       data: { answers: answers!, isNext: hasNext, total: total! },
     };
-  }
-  catch(error) {
+  } catch (error) {
     return handleError(error) as ErrorResponse;
   }
 }
@@ -214,7 +214,6 @@ export async function getUserTopTags(params: GetUSerTagsParams): Promise<
   const { userId } = params;
 
   try {
-
     const result = await apiTag.getTopTagsUser(userId);
 
     const { success, data: userTags, error } = result;
@@ -225,8 +224,43 @@ export async function getUserTopTags(params: GetUSerTagsParams): Promise<
 
     return {
       success: true,
-      data: {tags: userTags!},
+      data: { tags: userTags! },
     };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getUserBadges(params: GetUserParams): Promise<
+  ActionResponse<{
+    badges: Badges;
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: GetUserSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId } = params;
+
+  try{
+    const result = await apiBadges.getUserBadges(userId);
+    const {success, data, error}  = result;
+
+    if (!success) {
+      throw new Error(error?.message);
+    }
+    
+    const badges = data;
+
+    return {
+      success: true,
+      data: {badges: badges!},
+    }
   }
   catch(error) {
     return handleError(error) as ErrorResponse;

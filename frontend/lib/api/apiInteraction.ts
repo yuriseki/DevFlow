@@ -2,7 +2,7 @@
 
 import { fetchHandler } from '@/lib/handlers/apiFetch';
 import { ActionResponse } from '@/types/global';
-import { type InteractionCreate } from '@/types/interaction';
+import { type InteractionCreate, QuestionLoad } from '@/types/interaction';
 
 export const apiInteraction = {
   create: (interaction: InteractionCreate): Promise<ActionResponse<void>> =>
@@ -10,4 +10,7 @@ export const apiInteraction = {
       method: "POST",
       body: JSON.stringify(interaction)
     }),
+
+  getSuggestedQuestions: (userId: number): Promise<ActionResponse<QuestionLoad[]>> =>
+    fetchHandler(`/api/v1/interaction/recomendation/${userId}`),
 };

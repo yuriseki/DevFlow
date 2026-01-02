@@ -6,7 +6,6 @@ from typing import Optional
 import sqlalchemy as sa
 from sqlmodel import SQLModel, Field, Column, func
 
-
 class ActionContentType(str, Enum):
     QUESTION = "question"
     ANSWER = "answer"
@@ -99,3 +98,9 @@ class InteractionLoad(InteractionBase):
     points: ActionPoints
     other_user_id: int | None
     other_points: ActionPoints
+
+class MostsInteractedTags(SQLModel):
+    id: int
+    name: str
+    count: int
+
