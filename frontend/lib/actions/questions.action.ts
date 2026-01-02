@@ -8,6 +8,7 @@ import {
   ErrorResponse,
   IncrementViewsParams,
   ExtendedUser,
+  GetUserParams,
 } from "@/types/global";
 import action from "@/lib/handlers/action";
 import {
@@ -21,11 +22,13 @@ import { apiAccount } from "@/lib/api/apiAccount";
 import handleError from "@/lib/handlers/error";
 import {
   DeleteQuestionSchema,
+  GetUserSchema,
   IncrementViewsSchema,
   PaginatedSearchParamsSchema,
 } from "../validations";
 import { createInteraction } from "./interaction.action";
 import { ActionContentType, ActionType } from "@/types/interaction";
+import { apiInteraction } from "../api/apiInteraction";
 
 export async function createQuestion(
   params: QuestionCreate
@@ -111,18 +114,17 @@ export async function getQuestion(
 
   const { id } = validationResult.params!;
 
-    // Update user reputation.
-    await createInteraction({
-      contentType: ActionContentType.QUESTION,
-      targetId: id,
-      actionType: ActionType.VIEW,
-    });
-
   const result = await apiQuestion.getQuestion(id);
   if (!result.success) {
     return handleError(result.error) as ErrorResponse;
   }
 
+  // Update user reputation.
+  await createInteraction({
+    contentType: ActionContentType.QUESTION,
+    targetId: id,
+    actionType: ActionType.VIEW,
+  });
   return { success: result.success, data: result.data };
 }
 
@@ -132,6 +134,7 @@ export async function getQuestions(
   const validationResult = await action({
     params,
     schema: PaginatedSearchParamsSchema,
+    authorize: true,
   });
 
   if (validationResult instanceof Error) {
@@ -139,8 +142,11 @@ export async function getQuestions(
   }
 
   const { page = 1, pageSize = 10, query = "", filter = "" } = params;
+  const userId = (validationResult?.session?.user as ExtendedUser)
+    ?.id || "0";
 
-  const result = await apiQuestion.getQuestions(page, pageSize, query, filter);
+
+  const result = await apiQuestion.getQuestions(page, pageSize, query, filter, parseInt(userId));
 
   if (!result.success) {
     return handleError(result.error) as ErrorResponse;
@@ -271,6 +277,40 @@ export async function deleteQuestion(params: deleteQuestionParams): Promise<
 
     return {
       success: true,
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getRecommendedQuestions(params: GetUserParams): Promise<
+  ActionResponse<{
+    questions: QuestionLoad[];
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: GetUserSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId } = params;
+
+  try {
+    const result = await apiQuestion.getSuggestedQuestions(userId);
+    const { success, data = [], error } = result;
+
+    if (!success) {
+      throw new Error(error?.message);
+    }
+
+    return {
+      success: true,
+      data: { questions: data },
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;

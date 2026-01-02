@@ -25,12 +25,13 @@ export const apiQuestion = {
       method: "DELETE"
     }),
 
-  getQuestions: (page: number, pageSize: number, query: string, filter: string): Promise<ActionResponse<QuestionLoad[]>> => {
+  getQuestions: (page: number, pageSize: number, query: string, filter: string, userId: number): Promise<ActionResponse<QuestionLoad[]>> => {
     const params = new URLSearchParams();
     if (page !== undefined && page !== null) params.append('page', page.toString());
     if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
     if (query) params.append('query', query);
     if (filter) params.append('filter', filter);
+    if (userId !== undefined && userId !== null) params.append('user_id', userId.toString());
     return fetchHandler(`/api/v1/question/questions?${params.toString()}`);
   },
 
@@ -47,4 +48,7 @@ export const apiQuestion = {
     if (pageSize !== undefined && pageSize !== null) params.append('page_size', pageSize.toString());
     return fetchHandler(`/api/v1/question/user-questions?${params.toString()}`);
   },
+
+  getSuggestedQuestions: (userId: number): Promise<ActionResponse<QuestionLoad[]>> =>
+    fetchHandler(`/api/v1/question/suggested-questions/${userId}`),
 };

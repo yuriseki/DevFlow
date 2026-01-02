@@ -3,6 +3,7 @@
 import {
   ActionResponse,
   ErrorResponse,
+  GetUserParams,
   PaginatedSearchParams,
 } from "@/types/global";
 import { UserLoad } from "@/types/user";
@@ -54,10 +55,6 @@ export async function getUsers(
     success: true,
     data: { users: result.data!.users, isNext: hasNext, totalUsers },
   };
-}
-
-interface GetUserParams {
-  userId: number;
 }
 
 export async function getUser(params: GetUserParams): Promise<

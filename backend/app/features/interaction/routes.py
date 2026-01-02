@@ -43,8 +43,3 @@ async def create(
         return status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-@router.get("/recomendation/{user_id}", response_model=List[QuestionLoad])
-async def get_suggested_questions(
-    user_id: int, session: AsyncSession = Depends(get_session)
-):
-    return await interaction_service.get_suggested_questions(session, user_id)

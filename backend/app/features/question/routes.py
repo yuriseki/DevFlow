@@ -113,11 +113,12 @@ async def get_questions(
     page_size: int = 10,
     query: str = "",
     filter: str = "",
+    user_id: int = 0,
     session: AsyncSession = Depends(get_session),
 ):
     """Get multiple questions"""
     questions: List[QuestionLoad] = await question_service.get_questions(
-        session, page, page_size, query, filter
+        session, page, page_size, query, filter, user_id
     )
     return questions
 
@@ -144,3 +145,13 @@ async def get_user_questions(
 ):
     questions = await question_service.get_user_questions(session, user_id, page, page_size)
     return questions
+
+
+@router.get("/suggested-questions/{user_id}", response_model=List[QuestionLoad])
+async def get_suggested_questions(
+    user_id: int, session: AsyncSession = Depends(get_session)
+):
+    try:
+        return await question_service.get_suggested_questions(session, user_id)
+    except Exception:
+        return status.HTTP_500_INTERNAL_SERVER_ERROR

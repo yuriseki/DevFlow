@@ -88,3 +88,13 @@ interface BadgeCount {
   SILVER: number;
   BRONZE: number;
 }
+
+interface GetUserParams {
+  userId: number;
+}
+
+interface GetUserParams {
+  userId: number;
+}
+
+

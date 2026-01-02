@@ -1,18 +1,24 @@
 """This module provides the service for the Question feature."""
 
-from itertools import count
-from typing import Type, List
+from typing import List, Type
 
 from fastapi import HTTPException, status
+from sqlalchemy import not_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy import not_
-from sqlmodel import delete, desc, select, func, or_
+from sqlmodel import delete, desc, func, or_, select
 
 from app.core.lib.base_model_service import BaseModelService
 from app.features.answer.models.answer import Answer
+from app.features.interaction.models.interaction import (
+    ActionContentType,
+    Interaction,
+    MostsInteractedTags,
+)
 from app.features.user_collection.models.user_collection import UserCollection
-from app.features.vote.models.vote import TargetVote, Vote, VoteType
+from app.features.vote.models.vote import TargetVote, Vote
+
+from ...tag.models.tag import Tag
 from ..models.question import (
     Question,
     QuestionCreate,
@@ -21,7 +27,6 @@ from ..models.question import (
     UserQuestionsResponse,
 )
 from ..models.question_tag_relationship import QuestionTagRelationship
-from ...tag.models.tag import Tag
 
 
 class QuestionService(
@@ -29,7 +34,8 @@ class QuestionService(
 ):
     """The service for the Question feature.
 
-    This class inherits from BaseModelService and provides the business logic for the Question feature.
+    This class inherits from BaseModelService and provides the business logic for
+    the Question feature.
     """
 
     def __init__(
@@ -187,7 +193,8 @@ class QuestionService(
         if tags_value is not None:
             new_tag_names = [tag_name.lower() for tag_name in tags_value]
 
-            # Store original tag names before modification for update_num_questions_in_tags
+            # Store original tag names before modification for
+            # update_num_questions_in_tags
             original_tag_names = [tag.name for tag in db_question.tags]
 
             if new_tag_names:
@@ -240,7 +247,8 @@ class QuestionService(
         self, session: AsyncSession, tag_names: List[str], commit: bool = True
     ):
         """
-        Updates the num_questions count for a list of tags by recalculating from the database.
+        Updates the num_questions count for a list of tags by recalculating from
+        the database.
         """
         if not tag_names:
             return
@@ -269,6 +277,7 @@ class QuestionService(
         page_size: int = 10,
         query: str = "",
         filter: str = "",
+        user_id: int = 0,
     ) -> List[QuestionLoad]:
         order = desc(Question.created_at)
         if filter == "popular":
@@ -278,7 +287,10 @@ class QuestionService(
         if filter == "unanswered":
             order = Question.created_at
         if filter == "recommended":
-            order = desc(Question.upvotes)
+            if user_id > 0:
+                return await self.get_suggested_questions(session, user_id)
+            else:
+                order = desc(Question.upvotes)
 
         smtm = (
             select(Question)
@@ -362,3 +374,69 @@ class QuestionService(
         total = count_result.scalar() or 0
 
         return UserQuestionsResponse(questions=questions_load, total=total)
+
+    async def get_top_interacted_tags(
+        self, session: AsyncSession, user_id: int
+    ) -> List[MostsInteractedTags]:
+        stmt = (
+            select(Tag.id, Tag.name, func.count(Interaction.id).label("count"))
+            .join(Question, Interaction.target_id == Question.id)
+            .join(
+                QuestionTagRelationship,
+                QuestionTagRelationship.question_id == Question.id,
+            )
+            .join(Tag, Tag.id == QuestionTagRelationship.tag_id)
+            .where(
+                Interaction.content_type == ActionContentType.QUESTION,
+                Interaction.user_id == user_id,
+            )
+            .limit(5)
+            .group_by(Tag.id, Tag.name)
+            .order_by(func.count(Interaction.id).desc())
+        )
+        result = (await session.execute(stmt)).mappings().all()
+        return [MostsInteractedTags.model_validate(row) for row in result]
+
+    async def get_suggested_questions(
+        self, session: AsyncSession, user_id: int
+    ) -> List[QuestionLoad]:
+        interacted_tags = await self.get_top_interacted_tags(session, user_id)
+        if not interacted_tags:
+            return []  # Or raise an error, depending on requirements
+
+        tag_ids = [tag.id for tag in interacted_tags]
+
+        # Remove the questions that the user has already interacted with.
+        smtm = (
+            select(Interaction.target_id)
+            .where(
+                Interaction.user_id == user_id,
+                Interaction.content_type == ActionContentType.QUESTION,
+                Interaction.other_user_id != user_id,
+            )
+            .distinct()
+        )
+
+        interacted_questions = (await session.exec(smtm)).all()
+        interacted_question_ids = [row for row in interacted_questions] or []
+        smtm = (
+            select(Question)
+            .join(
+                QuestionTagRelationship,
+                QuestionTagRelationship.question_id == Question.id,
+            )
+            .where(
+                QuestionTagRelationship.tag_id.in_(tag_ids),
+                Question.id.not_in(interacted_question_ids),  # pyright: ignore
+                Question.author_id != user_id,
+            )
+            .options(
+                selectinload(Question.tags),
+                selectinload(Question.author),
+                selectinload(Question.answers),
+            )
+            .order_by(desc(Question.upvotes))
+        )
+
+        questions = (await session.exec(smtm)).all()
+        return [QuestionLoad.model_validate(q) for q in questions]
